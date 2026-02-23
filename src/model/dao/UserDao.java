@@ -18,6 +18,8 @@ public class UserDao {
                 User user = new User();
                 user.setId(rs.getInt("id"));
                 user.setUsername(rs.getString("username"));
+                user.setEmail(rs.getString("email"));
+                user.setPhoneNumber(rs.getString("phone_number"));
                 user.setPasswordHash(rs.getString("password_hash"));
                 user.setRole(rs.getString("role"));
                 return user;
@@ -38,11 +40,60 @@ public class UserDao {
                 User u = new User();
                 u.setId(rs.getInt("id"));
                 u.setUsername(rs.getString("username"));
+                u.setEmail(rs.getString("email"));
+                u.setPhoneNumber(rs.getString("phone_number"));
                 u.setRole(rs.getString("role"));
                 users.add(u);
             }
         }
         return users;
+    }
+
+    public int countAll() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users WHERE deleted_at IS NULL";
+        try (Connection conn = DbConfig.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public List<User> searchByUsername(String username, int limit, int offset) throws SQLException {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM users WHERE username LIKE ? AND deleted_at IS NULL LIMIT ? OFFSET ?";
+        try (Connection conn = DbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "%" + username + "%");
+            stmt.setInt(2, limit);
+            stmt.setInt(3, offset);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                User u = new User();
+                u.setId(rs.getInt("id"));
+                u.setUsername(rs.getString("username"));
+                u.setEmail(rs.getString("email"));
+                u.setPhoneNumber(rs.getString("phone_number"));
+                u.setRole(rs.getString("role"));
+                users.add(u);
+            }
+        }
+        return users;
+    }
+
+    public int countSearchByUsername(String username) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users WHERE username LIKE ? AND deleted_at IS NULL";
+        try (Connection conn = DbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "%" + username + "%");
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
     }
 
     public boolean softDelete(int userId) throws SQLException {

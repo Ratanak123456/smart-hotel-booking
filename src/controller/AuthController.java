@@ -62,14 +62,20 @@ public class AuthController {
 
         try {
             User user = userService.login(username, password);
-            if (user != null && user.getRole().equals("USER")) {
+            if (user != null && (user.getRole().equals("USER") || user.getRole().equals("ADMIN"))) {
                 Table successTable = new Table(1);
-                successTable.addCell("✓ Login successful! Welcome, " + user.getUsername());
+                successTable.addCell("✓ Login successful! Welcome, " + user.getUsername() + " (" + user.getRole() + ")");
                 System.out.println(successTable.render());
 
-                // Enter room listing panel
-                UserPanel userPanel = new UserPanel(user);
-                userPanel.startRoomListing();  // <-- new method
+                if (user.getRole().equals("ADMIN")) {
+                    // Enter admin panel
+                    view.AdminPanel adminPanel = new view.AdminPanel(user);
+                    adminPanel.start();
+                } else {
+                    // Enter room listing panel
+                    UserPanel userPanel = new UserPanel(user);
+                    userPanel.startRoomListing();
+                }
 
                 // After returning, back to login menu
                 return;
