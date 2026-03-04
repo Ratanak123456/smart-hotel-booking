@@ -6,7 +6,6 @@ import model.entities.Booking;
 import model.entities.Invoice;
 import model.service.RoomService;
 import model.service.BookingService;
-import org.nocrala.tools.texttablefmt.BorderStyle;
 import org.nocrala.tools.texttablefmt.Table;
 
 import java.sql.SQLException;
@@ -32,17 +31,14 @@ public class UserPanel {
     // Entry point – main menu
     public void start() throws SQLException {
         while (true) {
-            Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-            headerTable.addCell("USER PANEL - Welcome, " + loggedInUser.getUsername());
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("USER PANEL - Welcome, " + loggedInUser.getUsername());
 
-            Table menuTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER);
-            menuTable.addCell("1. View Rooms");
-            menuTable.addCell("2. Make a Booking");
-            menuTable.addCell("3. My Bookings");
-            menuTable.addCell("4. My Invoices");
-            menuTable.addCell("5. Logout");
-            System.out.println(menuTable.render());
+            UiUtils.printMenu(null,
+                    "1. View Rooms",
+                    "2. Make a Booking",
+                    "3. My Bookings",
+                    "4. My Invoices",
+                    "5. Logout");
 
             System.out.print("Select an option (1-5): ");
             String choice = scanner.nextLine().trim();
@@ -61,14 +57,10 @@ public class UserPanel {
                     viewMyInvoices();
                     break;
                 case "5":
-                    Table logoutTable = new Table(1);
-                    logoutTable.addCell("Logging out...");
-                    System.out.println(logoutTable.render());
+                    UiUtils.printMessage("Logging out...");
                     return;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option. Please try again.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option. Please try again.");
             }
         }
     }
@@ -77,21 +69,17 @@ public class UserPanel {
     // MAKE BOOKING
     // ============================================
     private void makeBooking() throws SQLException {
-        Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-        headerTable.addCell("MAKE A BOOKING");
-        System.out.println(headerTable.render());
+        UiUtils.printHeader("MAKE A BOOKING");
 
         // Show available rooms first
         List<Room> availableRooms = roomService.getRoomsByStatus("AVAILABLE", 1);
         if (availableRooms.isEmpty()) {
-            Table emptyTable = new Table(1);
-            emptyTable.addCell("No rooms available for booking.");
-            System.out.println(emptyTable.render());
+            UiUtils.printMessage("No rooms available for booking.");
             return;
         }
 
         // Display available rooms
-        Table roomTable = new Table(5);
+        Table roomTable = UiUtils.createDataTable(5);
         roomTable.addCell("ID");
         roomTable.addCell("Room No");
         roomTable.addCell("Type");
@@ -118,18 +106,14 @@ public class UserPanel {
         try {
             roomId = Integer.parseInt(roomIdStr);
         } catch (NumberFormatException e) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Invalid room ID.");
-            System.out.println(errorTable.render());
+            UiUtils.printError("Invalid room ID.");
             return;
         }
 
         // Verify room exists and is available
         Room selectedRoom = roomService.getRoomById(roomId);
         if (selectedRoom == null || selectedRoom.getStatus() != Room.RoomStatus.AVAILABLE) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Room not found or not available.");
-            System.out.println(errorTable.render());
+            UiUtils.printError("Room not found or not available.");
             return;
         }
 
@@ -142,9 +126,7 @@ public class UserPanel {
         try {
             checkInDate = LocalDate.parse(checkInStr, formatter);
         } catch (DateTimeParseException e) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Invalid date format. Use yyyy-MM-dd");
-            System.out.println(errorTable.render());
+            UiUtils.printError("Invalid date format. Use yyyy-MM-dd");
             return;
         }
 
@@ -154,24 +136,18 @@ public class UserPanel {
         try {
             checkOutDate = LocalDate.parse(checkOutStr, formatter);
         } catch (DateTimeParseException e) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Invalid date format. Use yyyy-MM-dd");
-            System.out.println(errorTable.render());
+            UiUtils.printError("Invalid date format. Use yyyy-MM-dd");
             return;
         }
 
         // Validate dates
         if (!checkOutDate.isAfter(checkInDate)) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Check-out date must be after check-in date.");
-            System.out.println(errorTable.render());
+            UiUtils.printError("Check-out date must be after check-in date.");
             return;
         }
 
         if (checkInDate.isBefore(LocalDate.now())) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Check-in date cannot be in the past.");
-            System.out.println(errorTable.render());
+            UiUtils.printError("Check-in date cannot be in the past.");
             return;
         }
 
@@ -182,7 +158,7 @@ public class UserPanel {
         java.math.BigDecimal totalPrice = basePrice.subtract(discount);
 
         // Show booking summary
-        Table summaryTable = new Table(2, BorderStyle.UNICODE_BOX_DOUBLE_BORDER);
+        Table summaryTable = UiUtils.createDataTable(2);
         summaryTable.addCell("BOOKING SUMMARY");
         summaryTable.addCell("");
         summaryTable.addCell("Room:");
@@ -208,9 +184,7 @@ public class UserPanel {
         String confirm = scanner.nextLine().trim().toLowerCase();
 
         if (!confirm.equals("y")) {
-            Table cancelTable = new Table(1);
-            cancelTable.addCell("Booking cancelled.");
-            System.out.println(cancelTable.render());
+            UiUtils.printMessage("Booking cancelled.");
             return;
         }
 
@@ -227,11 +201,9 @@ public class UserPanel {
 
             Booking createdBooking = bookingService.createBooking(booking);
 
-            Table successTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-            successTable.addCell("BOOKING SUCCESSFUL!");
-            System.out.println(successTable.render());
+            UiUtils.printSuccess("BOOKING SUCCESSFUL!");
 
-            Table bookingInfoTable = new Table(2);
+            Table bookingInfoTable = UiUtils.createDataTable(2);
             bookingInfoTable.addCell("Booking ID:");
             bookingInfoTable.addCell(String.valueOf(createdBooking.getId()));
             bookingInfoTable.addCell("Status:");
@@ -244,9 +216,7 @@ public class UserPanel {
             scanner.nextLine();
 
         } catch (SQLException e) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Error creating booking: " + e.getMessage());
-            System.out.println(errorTable.render());
+            UiUtils.printError("Error creating booking: " + e.getMessage());
         }
     }
 
@@ -256,21 +226,17 @@ public class UserPanel {
     private void viewMyBookings() throws SQLException {
         List<Booking> bookings = bookingService.getUserBookings(loggedInUser.getId());
 
-        Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-        headerTable.addCell("MY BOOKINGS");
-        System.out.println(headerTable.render());
+        UiUtils.printHeader("MY BOOKINGS");
 
         if (bookings.isEmpty()) {
-            Table emptyTable = new Table(1);
-            emptyTable.addCell("You have no bookings yet.");
-            System.out.println(emptyTable.render());
+            UiUtils.printMessage("You have no bookings yet.");
             System.out.println("\nPress Enter to continue...");
             scanner.nextLine();
             return;
         }
 
         // Display bookings
-        Table table = new Table(6);
+        Table table = UiUtils.createDataTable(6);
         table.addCell("ID");
         table.addCell("Room");
         table.addCell("Check-in");
@@ -303,20 +269,16 @@ public class UserPanel {
                 if (booking != null) {
                     viewBookingDetails(booking);
                 } else {
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Booking not found.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Booking not found.");
                 }
             } catch (NumberFormatException e) {
-                Table errorTable = new Table(1);
-                errorTable.addCell("Invalid booking ID.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Invalid booking ID.");
             }
         }
     }
 
     private void viewBookingDetails(Booking booking) throws SQLException {
-        Table detailTable = new Table(2, BorderStyle.UNICODE_BOX_DOUBLE_BORDER);
+        Table detailTable = UiUtils.createDataTable(2);
         detailTable.addCell("BOOKING DETAILS");
         detailTable.addCell("");
         detailTable.addCell("Booking ID:");
@@ -359,21 +321,17 @@ public class UserPanel {
     private void viewMyInvoices() throws SQLException {
         List<Invoice> invoices = bookingService.getUserInvoices(loggedInUser.getId());
 
-        Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-        headerTable.addCell("MY INVOICES");
-        System.out.println(headerTable.render());
+        UiUtils.printHeader("MY INVOICES");
 
         if (invoices.isEmpty()) {
-            Table emptyTable = new Table(1);
-            emptyTable.addCell("You have no invoices yet.");
-            System.out.println(emptyTable.render());
+            UiUtils.printMessage("You have no invoices yet.");
             System.out.println("\nPress Enter to continue...");
             scanner.nextLine();
             return;
         }
 
         // Display invoices
-        Table table = new Table(5);
+        Table table = UiUtils.createDataTable(5);
         table.addCell("Invoice No");
         table.addCell("Room");
         table.addCell("Check-in");
@@ -402,9 +360,7 @@ public class UserPanel {
             if (invoice != null) {
                 viewInvoiceDetails(invoice);
             } else {
-                Table errorTable = new Table(1);
-                errorTable.addCell("Invoice not found.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Invoice not found.");
                 System.out.println("\nPress Enter to continue...");
                 scanner.nextLine();
             }
@@ -412,7 +368,7 @@ public class UserPanel {
     }
 
     private void viewInvoiceDetails(Invoice invoice) {
-        Table detailTable = new Table(2, BorderStyle.UNICODE_BOX_DOUBLE_BORDER);
+        Table detailTable = UiUtils.createDataTable(2);
         detailTable.addCell("INVOICE");
         detailTable.addCell("");
         detailTable.addCell("Invoice Number:");
@@ -449,18 +405,15 @@ public class UserPanel {
     // ============================================
     private void viewAvailableRooms() throws SQLException {
         while (true) {
-            Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-            headerTable.addCell("VIEW ROOMS");
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("VIEW ROOMS");
 
-            Table viewTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER);
-            viewTable.addCell("1. View all rooms (with features)");
-            viewTable.addCell("2. Filter by room type");
-            viewTable.addCell("3. Filter by availability status");
-            viewTable.addCell("4. Filter by type AND status");
-            viewTable.addCell("5. View detailed room features");
-            viewTable.addCell("6. Back to login");
-            System.out.println(viewTable.render());
+            UiUtils.printMenu(null,
+                    "1. View all rooms (with features)",
+                    "2. Filter by room type",
+                    "3. Filter by availability status",
+                    "4. Filter by type AND status",
+                    "5. View detailed room features",
+                    "6. Back to login");
 
             System.out.print("Select an option (1-6): ");
             String choice = scanner.nextLine().trim();
@@ -484,25 +437,19 @@ public class UserPanel {
                 case "6":
                     return; // back to login menu
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option. Please try again.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option. Please try again.");
             }
         }
     }
 
     // All remaining methods unchanged (they only use RoomService)
     private void filterByRoomType() throws SQLException {
-        Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-        headerTable.addCell("Available Room Types");
-        System.out.println(headerTable.render());
-
-        Table typeTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER);
-        typeTable.addCell("1. Regular");
-        typeTable.addCell("2. Family");
-        typeTable.addCell("3. Suite");
-        typeTable.addCell("4. Deluxe");
-        System.out.println(typeTable.render());
+        UiUtils.printHeader("Available Room Types");
+        UiUtils.printMenu(null,
+                "1. Regular",
+                "2. Family",
+                "3. Suite",
+                "4. Deluxe");
 
         System.out.print("Select room type (1-4): ");
         String choice = scanner.nextLine().trim();
@@ -513,24 +460,18 @@ public class UserPanel {
             case "3": roomType = "Suite"; break;
             case "4": roomType = "Deluxe"; break;
             default:
-                Table errorTable = new Table(1);
-                errorTable.addCell("Invalid option.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Invalid option.");
                 return;
         }
         displayRoomsPaginated(roomType, null);
     }
 
     private void filterByRoomStatus() throws SQLException {
-        Table headerTable = new Table(1);
-        headerTable.addCell("Room Status Options");
-        System.out.println(headerTable.render());
-
-        Table statusTable = new Table(1);
-        statusTable.addCell("1. Available");
-        statusTable.addCell("2. Occupied");
-        statusTable.addCell("3. Maintenance");
-        System.out.println(statusTable.render());
+        UiUtils.printHeader("Room Status Options");
+        UiUtils.printMenu(null,
+                "1. Available",
+                "2. Occupied",
+                "3. Maintenance");
 
         System.out.print("Select status (1-3): ");
         String choice = scanner.nextLine().trim();
@@ -540,25 +481,19 @@ public class UserPanel {
             case "2": status = "OCCUPIED"; break;
             case "3": status = "MAINTENANCE"; break;
             default:
-                Table errorTable = new Table(1);
-                errorTable.addCell("Invalid option.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Invalid option.");
                 return;
         }
         displayRoomsPaginated(null, status);
     }
 
     private void filterByTypeAndStatus() throws SQLException {
-        Table typeHeaderTable = new Table(1);
-        typeHeaderTable.addCell("Select Room Type");
-        System.out.println(typeHeaderTable.render());
-
-        Table typeTable = new Table(1);
-        typeTable.addCell("1. Regular");
-        typeTable.addCell("2. Family");
-        typeTable.addCell("3. Suite");
-        typeTable.addCell("4. Deluxe");
-        System.out.println(typeTable.render());
+        UiUtils.printHeader("Select Room Type");
+        UiUtils.printMenu(null,
+                "1. Regular",
+                "2. Family",
+                "3. Suite",
+                "4. Deluxe");
 
         System.out.print("Select room type (1-4): ");
         String typeChoice = scanner.nextLine().trim();
@@ -569,21 +504,15 @@ public class UserPanel {
             case "3": roomType = "Suite"; break;
             case "4": roomType = "Deluxe"; break;
             default:
-                Table errorTable = new Table(1);
-                errorTable.addCell("Invalid option.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Invalid option.");
                 return;
         }
 
-        Table statusHeaderTable = new Table(1);
-        statusHeaderTable.addCell("Select Room Status");
-        System.out.println(statusHeaderTable.render());
-
-        Table statusTable = new Table(1);
-        statusTable.addCell("1. Available");
-        statusTable.addCell("2. Occupied");
-        statusTable.addCell("3. Maintenance");
-        System.out.println(statusTable.render());
+        UiUtils.printHeader("Select Room Status");
+        UiUtils.printMenu(null,
+                "1. Available",
+                "2. Occupied",
+                "3. Maintenance");
 
         System.out.print("Select status (1-3): ");
         String statusChoice = scanner.nextLine().trim();
@@ -593,9 +522,7 @@ public class UserPanel {
             case "2": status = "OCCUPIED"; break;
             case "3": status = "MAINTENANCE"; break;
             default:
-                Table errorTable = new Table(1);
-                errorTable.addCell("Invalid option.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Invalid option.");
                 return;
         }
         displayRoomsPaginatedWithBoth(roomType, status);
@@ -622,16 +549,12 @@ public class UserPanel {
 
             int totalPages = (int) Math.ceil((double) totalCount / rowsPerPage);
 
-            Table headerTable = new Table(1);
-            headerTable.addCell("AVAILABLE ROOMS (Page " + pageNumber + "/" + totalPages + ")");
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("AVAILABLE ROOMS (Page " + pageNumber + "/" + totalPages + ")");
 
             if (rooms.isEmpty()) {
-                Table emptyTable = new Table(1);
-                emptyTable.addCell("No rooms found.");
-                System.out.println(emptyTable.render());
+                UiUtils.printMessage("No rooms found.");
             } else {
-                Table table = new Table(6);
+                Table table = UiUtils.createDataTable(6);
                 table.addCell("ID");
                 table.addCell("Room No");
                 table.addCell("Type");
@@ -657,11 +580,20 @@ public class UserPanel {
                 System.out.println(table.render());
             }
 
-            Table navTable = new Table(1);
-            if (pageNumber > 1) navTable.addCell("p - Previous page");
-            if (pageNumber < totalPages) navTable.addCell("n - Next page");
-            navTable.addCell("b - Back");
-            System.out.println(navTable.render());
+            // Navigation
+            if (pageNumber > 1 || pageNumber < totalPages) {
+                String prev = pageNumber > 1 ? "p - Previous page" : "";
+                String next = pageNumber < totalPages ? "n - Next page" : "";
+                if (!prev.isEmpty() && !next.isEmpty()) {
+                    UiUtils.printMenu(null, prev, next, "b - Back");
+                } else if (!prev.isEmpty()) {
+                    UiUtils.printMenu(null, prev, "b - Back");
+                } else {
+                    UiUtils.printMenu(null, next, "b - Back");
+                }
+            } else {
+                UiUtils.printMenu(null, "b - Back");
+            }
 
             System.out.print("Choose: ");
             String navChoice = scanner.nextLine().trim().toLowerCase();
@@ -669,26 +601,16 @@ public class UserPanel {
             switch (navChoice) {
                 case "p":
                     if (pageNumber > 1) pageNumber--;
-                    else {
-                        Table errorTable = new Table(1);
-                        errorTable.addCell("Already on first page.");
-                        System.out.println(errorTable.render());
-                    }
+                    else UiUtils.printError("Already on first page.");
                     break;
                 case "n":
                     if (pageNumber < totalPages) pageNumber++;
-                    else {
-                        Table errorTable = new Table(1);
-                        errorTable.addCell("Already on last page.");
-                        System.out.println(errorTable.render());
-                    }
+                    else UiUtils.printError("Already on last page.");
                     break;
                 case "b":
                     return;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option.");
             }
         }
     }
@@ -702,16 +624,12 @@ public class UserPanel {
         while (true) {
             List<Room> rooms = roomService.getRoomsByTypeAndStatus(roomType, status, pageNumber);
 
-            Table headerTable = new Table(1);
-            headerTable.addCell("FILTERED ROOMS - " + roomType + " - " + status + " (Page " + pageNumber + "/" + totalPages + ")");
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("FILTERED ROOMS - " + roomType + " - " + status + " (Page " + pageNumber + "/" + totalPages + ")");
 
             if (rooms.isEmpty()) {
-                Table emptyTable = new Table(1);
-                emptyTable.addCell("No rooms found matching your criteria.");
-                System.out.println(emptyTable.render());
+                UiUtils.printMessage("No rooms found matching your criteria.");
             } else {
-                Table table = new Table(6);
+                Table table = UiUtils.createDataTable(6);
                 table.addCell("ID");
                 table.addCell("Room No");
                 table.addCell("Type");
@@ -737,11 +655,20 @@ public class UserPanel {
                 System.out.println(table.render());
             }
 
-            Table navTable = new Table(1);
-            if (pageNumber > 1) navTable.addCell("p - Previous page");
-            if (pageNumber < totalPages) navTable.addCell("n - Next page");
-            navTable.addCell("b - Back");
-            System.out.println(navTable.render());
+            // Navigation
+            if (pageNumber > 1 || pageNumber < totalPages) {
+                String prev = pageNumber > 1 ? "p - Previous page" : "";
+                String next = pageNumber < totalPages ? "n - Next page" : "";
+                if (!prev.isEmpty() && !next.isEmpty()) {
+                    UiUtils.printMenu(null, prev, next, "b - Back");
+                } else if (!prev.isEmpty()) {
+                    UiUtils.printMenu(null, prev, "b - Back");
+                } else {
+                    UiUtils.printMenu(null, next, "b - Back");
+                }
+            } else {
+                UiUtils.printMenu(null, "b - Back");
+            }
 
             System.out.print("Choose: ");
             String navChoice = scanner.nextLine().trim().toLowerCase();
@@ -751,20 +678,16 @@ public class UserPanel {
                 case "n": if (pageNumber < totalPages) pageNumber++; break;
                 case "b": return;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option.");
             }
         }
     }
 
     private void viewDetailedRoomFeatures() throws SQLException {
-        Table headerTable = new Table(1);
-        headerTable.addCell("ROOM DETAILS WITH COMPLETE FEATURES");
-        System.out.println(headerTable.render());
+        UiUtils.printHeader("ROOM DETAILS WITH COMPLETE FEATURES");
 
         List<Room> rooms = roomService.getAllRoomsPaginated(1);
-        Table listTable = new Table(5);
+        Table listTable = UiUtils.createDataTable(5);
         listTable.addCell("ID");
         listTable.addCell("Room No");
         listTable.addCell("Type");
@@ -788,17 +711,13 @@ public class UserPanel {
             Room room = roomService.getRoomById(roomId);
 
             if (room == null) {
-                Table errorTable = new Table(1);
-                errorTable.addCell("Room not found.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Room not found.");
                 return;
             }
 
-            Table detailHeader = new Table(1);
-            detailHeader.addCell("COMPLETE ROOM DETAILS");
-            System.out.println(detailHeader.render());
+            UiUtils.printHeader("COMPLETE ROOM DETAILS");
 
-            Table detailTable = new Table(2);
+            Table detailTable = UiUtils.createDataTable(2);
             detailTable.addCell("Room ID:");
             detailTable.addCell(String.valueOf(room.getId()));
             detailTable.addCell("Room Number:");
@@ -817,9 +736,7 @@ public class UserPanel {
             scanner.nextLine();
 
         } catch (NumberFormatException e) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Invalid room ID format.");
-            System.out.println(errorTable.render());
+            UiUtils.printError("Invalid room ID format.");
         }
     }
 }

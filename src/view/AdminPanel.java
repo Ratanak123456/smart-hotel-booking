@@ -6,7 +6,6 @@ import model.entities.Booking;
 import model.service.RoomService;
 import model.service.UserService;
 import model.service.BookingService;
-import org.nocrala.tools.texttablefmt.BorderStyle;
 import org.nocrala.tools.texttablefmt.Table;
 
 import java.sql.SQLException;
@@ -30,16 +29,13 @@ public class AdminPanel {
 
     public void start() throws SQLException {
         while (true) {
-            Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-            headerTable.addCell("ADMIN PANEL - Welcome, " + loggedInAdmin.getUsername());
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("ADMIN PANEL - Welcome, " + loggedInAdmin.getUsername());
 
-            Table menuTable = new Table(1, BorderStyle.UNICODE_BOX);
-            menuTable.addCell("1. Room Management");
-            menuTable.addCell("2. User Management");
-            menuTable.addCell("3. Booking Management");
-            menuTable.addCell("4. Logout");
-            System.out.println(menuTable.render());
+            UiUtils.printMenu(null,
+                    "1. Room Management",
+                    "2. User Management",
+                    "3. Booking Management",
+                    "4. Logout");
 
             System.out.print("Select an option (1-4): ");
             String choice = scanner.nextLine().trim();
@@ -55,14 +51,10 @@ public class AdminPanel {
                     bookingManagement();
                     break;
                 case "4":
-                    Table logoutTable = new Table(1);
-                    logoutTable.addCell("Logged out successfully.");
-                    System.out.println(logoutTable.render());
+                    UiUtils.printMessage("Logged out successfully.");
                     return;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option. Please try again.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option. Please try again.");
             }
         }
     }
@@ -70,19 +62,16 @@ public class AdminPanel {
     // ==================== ROOM MANAGEMENT ====================
     private void roomManagement() throws SQLException {
         while (true) {
-            Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-            headerTable.addCell("ROOM MANAGEMENT");
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("ROOM MANAGEMENT");
 
-            Table menuTable = new Table(1, BorderStyle.UNICODE_BOX);
-            menuTable.addCell("1. View all rooms");
-            menuTable.addCell("2. Search/Filter by room type");
-            menuTable.addCell("3. Search/Filter by availability status");
-            menuTable.addCell("4. Filter by type AND status");
-            menuTable.addCell("5. Sort rooms by price");
-            menuTable.addCell("6. View detailed room features");
-            menuTable.addCell("7. Back to admin menu");
-            System.out.println(menuTable.render());
+            UiUtils.printMenu(null,
+                    "1. View all rooms",
+                    "2. Search/Filter by room type",
+                    "3. Search/Filter by availability status",
+                    "4. Filter by type AND status",
+                    "5. Sort rooms by price",
+                    "6. View detailed room features",
+                    "7. Back to admin menu");
 
             System.out.print("Select an option (1-7): ");
             String choice = scanner.nextLine().trim();
@@ -109,24 +98,18 @@ public class AdminPanel {
                 case "7":
                     return;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option. Please try again.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option. Please try again.");
             }
         }
     }
 
     private void filterByRoomType() throws SQLException {
-        Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-        headerTable.addCell("Available Room Types");
-        System.out.println(headerTable.render());
-
-        Table typeTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER);
-        typeTable.addCell("1. Regular");
-        typeTable.addCell("2. Family");
-        typeTable.addCell("3. Suite");
-        typeTable.addCell("4. Deluxe");
-        System.out.println(typeTable.render());
+        UiUtils.printHeader("Available Room Types");
+        UiUtils.printMenu(null,
+                "1. Regular",
+                "2. Family",
+                "3. Suite",
+                "4. Deluxe");
 
         System.out.print("Select room type (1-4): ");
         String choice = scanner.nextLine().trim();
@@ -137,24 +120,18 @@ public class AdminPanel {
             case "3": roomType = "Suite"; break;
             case "4": roomType = "Deluxe"; break;
             default:
-                Table errorTable = new Table(1);
-                errorTable.addCell("Invalid option.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Invalid option.");
                 return;
         }
         displayRoomsPaginated(roomType, null);
     }
 
     private void filterByRoomStatus() throws SQLException {
-        Table headerTable = new Table(1);
-        headerTable.addCell("Room Status Options");
-        System.out.println(headerTable.render());
-
-        Table statusTable = new Table(1);
-        statusTable.addCell("1. Available");
-        statusTable.addCell("2. Occupied");
-        statusTable.addCell("3. Maintenance");
-        System.out.println(statusTable.render());
+        UiUtils.printHeader("Room Status Options");
+        UiUtils.printMenu(null,
+                "1. Available",
+                "2. Occupied",
+                "3. Maintenance");
 
         System.out.print("Select status (1-3): ");
         String choice = scanner.nextLine().trim();
@@ -164,25 +141,19 @@ public class AdminPanel {
             case "2": status = "OCCUPIED"; break;
             case "3": status = "MAINTENANCE"; break;
             default:
-                Table errorTable = new Table(1);
-                errorTable.addCell("Invalid option.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Invalid option.");
                 return;
         }
         displayRoomsPaginated(null, status);
     }
 
     private void filterByTypeAndStatus() throws SQLException {
-        Table typeHeaderTable = new Table(1);
-        typeHeaderTable.addCell("Select Room Type");
-        System.out.println(typeHeaderTable.render());
-
-        Table typeTable = new Table(1);
-        typeTable.addCell("1. Regular");
-        typeTable.addCell("2. Family");
-        typeTable.addCell("3. Suite");
-        typeTable.addCell("4. Deluxe");
-        System.out.println(typeTable.render());
+        UiUtils.printHeader("Select Room Type");
+        UiUtils.printMenu(null,
+                "1. Regular",
+                "2. Family",
+                "3. Suite",
+                "4. Deluxe");
 
         System.out.print("Select room type (1-4): ");
         String typeChoice = scanner.nextLine().trim();
@@ -193,21 +164,15 @@ public class AdminPanel {
             case "3": roomType = "Suite"; break;
             case "4": roomType = "Deluxe"; break;
             default:
-                Table errorTable = new Table(1);
-                errorTable.addCell("Invalid option.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Invalid option.");
                 return;
         }
 
-        Table statusHeaderTable = new Table(1);
-        statusHeaderTable.addCell("Select Room Status");
-        System.out.println(statusHeaderTable.render());
-
-        Table statusTable = new Table(1);
-        statusTable.addCell("1. Available");
-        statusTable.addCell("2. Occupied");
-        statusTable.addCell("3. Maintenance");
-        System.out.println(statusTable.render());
+        UiUtils.printHeader("Select Room Status");
+        UiUtils.printMenu(null,
+                "1. Available",
+                "2. Occupied",
+                "3. Maintenance");
 
         System.out.print("Select status (1-3): ");
         String statusChoice = scanner.nextLine().trim();
@@ -217,9 +182,7 @@ public class AdminPanel {
             case "2": status = "OCCUPIED"; break;
             case "3": status = "MAINTENANCE"; break;
             default:
-                Table errorTable = new Table(1);
-                errorTable.addCell("Invalid option.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Invalid option.");
                 return;
         }
         displayRoomsPaginatedWithBoth(roomType, status);
@@ -246,16 +209,12 @@ public class AdminPanel {
 
             int totalPages = (int) Math.ceil((double) totalCount / rowsPerPage);
 
-            Table headerTable = new Table(1);
-            headerTable.addCell("ROOMS (Page " + pageNumber + "/" + totalPages + ")");
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("ROOMS (Page " + pageNumber + "/" + totalPages + ")");
 
             if (rooms.isEmpty()) {
-                Table emptyTable = new Table(1);
-                emptyTable.addCell("No rooms found.");
-                System.out.println(emptyTable.render());
+                UiUtils.printMessage("No rooms found.");
             } else {
-                Table table = new Table(6);
+                Table table = UiUtils.createDataTable(6);
                 table.addCell("ID");
                 table.addCell("Room No");
                 table.addCell("Type");
@@ -281,11 +240,21 @@ public class AdminPanel {
                 System.out.println(table.render());
             }
 
-            Table navTable = new Table(1);
-            if (pageNumber > 1) navTable.addCell("p - Previous page");
-            if (pageNumber < totalPages) navTable.addCell("n - Next page");
-            navTable.addCell("b - Back");
-            System.out.println(navTable.render());
+            // Navigation
+            if (pageNumber > 1 || pageNumber < totalPages) {
+                String prev = pageNumber > 1 ? "p - Previous page" : "";
+                String next = pageNumber < totalPages ? "n - Next page" : "";
+                // Filter out empty strings
+                if (!prev.isEmpty() && !next.isEmpty()) {
+                    UiUtils.printMenu(null, prev, next, "b - Back");
+                } else if (!prev.isEmpty()) {
+                    UiUtils.printMenu(null, prev, "b - Back");
+                } else {
+                    UiUtils.printMenu(null, next, "b - Back");
+                }
+            } else {
+                UiUtils.printMenu(null, "b - Back");
+            }
 
             System.out.print("Choose: ");
             String navChoice = scanner.nextLine().trim().toLowerCase();
@@ -293,26 +262,16 @@ public class AdminPanel {
             switch (navChoice) {
                 case "p":
                     if (pageNumber > 1) pageNumber--;
-                    else {
-                        Table errorTable = new Table(1);
-                        errorTable.addCell("Already on first page.");
-                        System.out.println(errorTable.render());
-                    }
+                    else UiUtils.printError("Already on first page.");
                     break;
                 case "n":
                     if (pageNumber < totalPages) pageNumber++;
-                    else {
-                        Table errorTable = new Table(1);
-                        errorTable.addCell("Already on last page.");
-                        System.out.println(errorTable.render());
-                    }
+                    else UiUtils.printError("Already on last page.");
                     break;
                 case "b":
                     return;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option.");
             }
         }
     }
@@ -326,16 +285,12 @@ public class AdminPanel {
         while (true) {
             List<Room> rooms = roomService.getRoomsByTypeAndStatus(roomType, status, pageNumber);
 
-            Table headerTable = new Table(1);
-            headerTable.addCell("FILTERED ROOMS - " + roomType + " - " + status + " (Page " + pageNumber + "/" + totalPages + ")");
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("FILTERED ROOMS - " + roomType + " - " + status + " (Page " + pageNumber + "/" + totalPages + ")");
 
             if (rooms.isEmpty()) {
-                Table emptyTable = new Table(1);
-                emptyTable.addCell("No rooms found matching your criteria.");
-                System.out.println(emptyTable.render());
+                UiUtils.printMessage("No rooms found matching your criteria.");
             } else {
-                Table table = new Table(6);
+                Table table = UiUtils.createDataTable(6);
                 table.addCell("ID");
                 table.addCell("Room No");
                 table.addCell("Type");
@@ -361,11 +316,20 @@ public class AdminPanel {
                 System.out.println(table.render());
             }
 
-            Table navTable = new Table(1);
-            if (pageNumber > 1) navTable.addCell("p - Previous page");
-            if (pageNumber < totalPages) navTable.addCell("n - Next page");
-            navTable.addCell("b - Back");
-            System.out.println(navTable.render());
+            // Navigation
+            if (pageNumber > 1 || pageNumber < totalPages) {
+                String prev = pageNumber > 1 ? "p - Previous page" : "";
+                String next = pageNumber < totalPages ? "n - Next page" : "";
+                if (!prev.isEmpty() && !next.isEmpty()) {
+                    UiUtils.printMenu(null, prev, next, "b - Back");
+                } else if (!prev.isEmpty()) {
+                    UiUtils.printMenu(null, prev, "b - Back");
+                } else {
+                    UiUtils.printMenu(null, next, "b - Back");
+                }
+            } else {
+                UiUtils.printMenu(null, "b - Back");
+            }
 
             System.out.print("Choose: ");
             String navChoice = scanner.nextLine().trim().toLowerCase();
@@ -375,18 +339,15 @@ public class AdminPanel {
                 case "n": if (pageNumber < totalPages) pageNumber++; break;
                 case "b": return;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option.");
             }
         }
     }
 
     private void sortRoomsByPrice() throws SQLException {
-        Table sortTable = new Table(1);
-        sortTable.addCell("1. Sort by price (Low to High)");
-        sortTable.addCell("2. Sort by price (High to Low)");
-        System.out.println(sortTable.render());
+        UiUtils.printMenu("Sort Options",
+                "1. Sort by price (Low to High)",
+                "2. Sort by price (High to Low)");
 
         System.out.print("Select sort option (1-2): ");
         String choice = scanner.nextLine().trim();
@@ -395,9 +356,7 @@ public class AdminPanel {
         if (choice.equals("2")) {
             ascending = false;
         } else if (!choice.equals("1")) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Invalid option.");
-            System.out.println(errorTable.render());
+            UiUtils.printError("Invalid option.");
             return;
         } else {
             ascending = true;
@@ -421,16 +380,12 @@ public class AdminPanel {
             });
 
             String sortLabel = ascending ? "Low to High" : "High to Low";
-            Table headerTable = new Table(1);
-            headerTable.addCell("ROOMS SORTED BY PRICE (" + sortLabel + ") - Page " + pageNumber + "/" + totalPages);
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("ROOMS SORTED BY PRICE (" + sortLabel + ") - Page " + pageNumber + "/" + totalPages);
 
             if (rooms.isEmpty()) {
-                Table emptyTable = new Table(1);
-                emptyTable.addCell("No rooms found.");
-                System.out.println(emptyTable.render());
+                UiUtils.printMessage("No rooms found.");
             } else {
-                Table table = new Table(6);
+                Table table = UiUtils.createDataTable(6);
                 table.addCell("ID");
                 table.addCell("Room No");
                 table.addCell("Type");
@@ -456,11 +411,20 @@ public class AdminPanel {
                 System.out.println(table.render());
             }
 
-            Table navTable = new Table(1);
-            if (pageNumber > 1) navTable.addCell("p - Previous page");
-            if (pageNumber < totalPages) navTable.addCell("n - Next page");
-            navTable.addCell("b - Back");
-            System.out.println(navTable.render());
+            // Navigation
+            if (pageNumber > 1 || pageNumber < totalPages) {
+                String prev = pageNumber > 1 ? "p - Previous page" : "";
+                String next = pageNumber < totalPages ? "n - Next page" : "";
+                if (!prev.isEmpty() && !next.isEmpty()) {
+                    UiUtils.printMenu(null, prev, next, "b - Back");
+                } else if (!prev.isEmpty()) {
+                    UiUtils.printMenu(null, prev, "b - Back");
+                } else {
+                    UiUtils.printMenu(null, next, "b - Back");
+                }
+            } else {
+                UiUtils.printMenu(null, "b - Back");
+            }
 
             System.out.print("Choose: ");
             String navChoice = scanner.nextLine().trim().toLowerCase();
@@ -470,20 +434,16 @@ public class AdminPanel {
                 case "n": if (pageNumber < totalPages) pageNumber++; break;
                 case "b": return;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option.");
             }
         }
     }
 
     private void viewDetailedRoomFeatures() throws SQLException {
-        Table headerTable = new Table(1);
-        headerTable.addCell("ROOM DETAILS WITH COMPLETE FEATURES");
-        System.out.println(headerTable.render());
+        UiUtils.printHeader("ROOM DETAILS WITH COMPLETE FEATURES");
 
         List<Room> rooms = roomService.getAllRoomsPaginated(1);
-        Table listTable = new Table(5);
+        Table listTable = UiUtils.createDataTable(5);
         listTable.addCell("ID");
         listTable.addCell("Room No");
         listTable.addCell("Type");
@@ -507,17 +467,13 @@ public class AdminPanel {
             Room room = roomService.getRoomById(roomId);
 
             if (room == null) {
-                Table errorTable = new Table(1);
-                errorTable.addCell("Room not found.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Room not found.");
                 return;
             }
 
-            Table detailHeader = new Table(1);
-            detailHeader.addCell("COMPLETE ROOM DETAILS");
-            System.out.println(detailHeader.render());
+            UiUtils.printHeader("COMPLETE ROOM DETAILS");
 
-            Table detailTable = new Table(2);
+            Table detailTable = UiUtils.createDataTable(2);
             detailTable.addCell("Room ID:");
             detailTable.addCell(String.valueOf(room.getId()));
             detailTable.addCell("Room Number:");
@@ -536,25 +492,20 @@ public class AdminPanel {
             scanner.nextLine();
 
         } catch (NumberFormatException e) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Invalid room ID format.");
-            System.out.println(errorTable.render());
+            UiUtils.printError("Invalid room ID format.");
         }
     }
 
     // ==================== USER MANAGEMENT ====================
     private void userManagement() throws SQLException {
         while (true) {
-            Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-            headerTable.addCell("USER MANAGEMENT");
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("USER MANAGEMENT");
 
-            Table menuTable = new Table(1, BorderStyle.UNICODE_BOX);
-            menuTable.addCell("1. List all users");
-            menuTable.addCell("2. Search user by username");
-            menuTable.addCell("3. Delete user");
-            menuTable.addCell("4. Back to admin menu");
-            System.out.println(menuTable.render());
+            UiUtils.printMenu(null,
+                    "1. List all users",
+                    "2. Search user by username",
+                    "3. Delete user",
+                    "4. Back to admin menu");
 
             System.out.print("Select an option (1-4): ");
             String choice = scanner.nextLine().trim();
@@ -572,9 +523,7 @@ public class AdminPanel {
                 case "4":
                     return;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option. Please try again.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option. Please try again.");
             }
         }
     }
@@ -588,16 +537,12 @@ public class AdminPanel {
             int totalCount = userService.getTotalUsersCount();
             int totalPages = (int) Math.ceil((double) totalCount / rowsPerPage);
 
-            Table headerTable = new Table(1);
-            headerTable.addCell("ALL USERS (Page " + pageNumber + "/" + totalPages + ")");
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("ALL USERS (Page " + pageNumber + "/" + totalPages + ")");
 
             if (users.isEmpty()) {
-                Table emptyTable = new Table(1);
-                emptyTable.addCell("No users found.");
-                System.out.println(emptyTable.render());
+                UiUtils.printMessage("No users found.");
             } else {
-                Table table = new Table(6);
+                Table table = UiUtils.createDataTable(6);
                 table.addCell("ID");
                 table.addCell("Username");
                 table.addCell("Email");
@@ -616,11 +561,20 @@ public class AdminPanel {
                 System.out.println(table.render());
             }
 
-            Table navTable = new Table(1);
-            if (pageNumber > 1) navTable.addCell("p - Previous page");
-            if (pageNumber < totalPages) navTable.addCell("n - Next page");
-            navTable.addCell("b - Back");
-            System.out.println(navTable.render());
+            // Navigation
+            if (pageNumber > 1 || pageNumber < totalPages) {
+                String prev = pageNumber > 1 ? "p - Previous page" : "";
+                String next = pageNumber < totalPages ? "n - Next page" : "";
+                if (!prev.isEmpty() && !next.isEmpty()) {
+                    UiUtils.printMenu(null, prev, next, "b - Back");
+                } else if (!prev.isEmpty()) {
+                    UiUtils.printMenu(null, prev, "b - Back");
+                } else {
+                    UiUtils.printMenu(null, next, "b - Back");
+                }
+            } else {
+                UiUtils.printMenu(null, "b - Back");
+            }
 
             System.out.print("Choose: ");
             String navChoice = scanner.nextLine().trim().toLowerCase();
@@ -628,26 +582,16 @@ public class AdminPanel {
             switch (navChoice) {
                 case "p":
                     if (pageNumber > 1) pageNumber--;
-                    else {
-                        Table errorTable = new Table(1);
-                        errorTable.addCell("Already on first page.");
-                        System.out.println(errorTable.render());
-                    }
+                    else UiUtils.printError("Already on first page.");
                     break;
                 case "n":
                     if (pageNumber < totalPages) pageNumber++;
-                    else {
-                        Table errorTable = new Table(1);
-                        errorTable.addCell("Already on last page.");
-                        System.out.println(errorTable.render());
-                    }
+                    else UiUtils.printError("Already on last page.");
                     break;
                 case "b":
                     return;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option.");
             }
         }
     }
@@ -657,9 +601,7 @@ public class AdminPanel {
         String searchTerm = scanner.nextLine().trim();
 
         if (searchTerm.isEmpty()) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Search term cannot be empty.");
-            System.out.println(errorTable.render());
+            UiUtils.printError("Search term cannot be empty.");
             return;
         }
 
@@ -671,16 +613,12 @@ public class AdminPanel {
             int totalCount = userService.getSearchUsersCount(searchTerm);
             int totalPages = Math.max(1, (int) Math.ceil((double) totalCount / rowsPerPage));
 
-            Table headerTable = new Table(1);
-            headerTable.addCell("SEARCH RESULTS FOR '" + searchTerm + "' (Page " + pageNumber + "/" + totalPages + ")");
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("SEARCH RESULTS FOR '" + searchTerm + "' (Page " + pageNumber + "/" + totalPages + ")");
 
             if (users.isEmpty()) {
-                Table emptyTable = new Table(1);
-                emptyTable.addCell("No users found matching '" + searchTerm + "'.");
-                System.out.println(emptyTable.render());
+                UiUtils.printMessage("No users found matching '" + searchTerm + "'.");
             } else {
-                Table table = new Table(6);
+                Table table = UiUtils.createDataTable(6);
                 table.addCell("ID");
                 table.addCell("Username");
                 table.addCell("Email");
@@ -699,11 +637,20 @@ public class AdminPanel {
                 System.out.println(table.render());
             }
 
-            Table navTable = new Table(1);
-            if (pageNumber > 1) navTable.addCell("p - Previous page");
-            if (pageNumber < totalPages) navTable.addCell("n - Next page");
-            navTable.addCell("b - Back");
-            System.out.println(navTable.render());
+            // Navigation
+            if (pageNumber > 1 || pageNumber < totalPages) {
+                String prev = pageNumber > 1 ? "p - Previous page" : "";
+                String next = pageNumber < totalPages ? "n - Next page" : "";
+                if (!prev.isEmpty() && !next.isEmpty()) {
+                    UiUtils.printMenu(null, prev, next, "b - Back");
+                } else if (!prev.isEmpty()) {
+                    UiUtils.printMenu(null, prev, "b - Back");
+                } else {
+                    UiUtils.printMenu(null, next, "b - Back");
+                }
+            } else {
+                UiUtils.printMenu(null, "b - Back");
+            }
 
             System.out.print("Choose: ");
             String navChoice = scanner.nextLine().trim().toLowerCase();
@@ -711,26 +658,16 @@ public class AdminPanel {
             switch (navChoice) {
                 case "p":
                     if (pageNumber > 1) pageNumber--;
-                    else {
-                        Table errorTable = new Table(1);
-                        errorTable.addCell("Already on first page.");
-                        System.out.println(errorTable.render());
-                    }
+                    else UiUtils.printError("Already on first page.");
                     break;
                 case "n":
                     if (pageNumber < totalPages) pageNumber++;
-                    else {
-                        Table errorTable = new Table(1);
-                        errorTable.addCell("Already on last page.");
-                        System.out.println(errorTable.render());
-                    }
+                    else UiUtils.printError("Already on last page.");
                     break;
                 case "b":
                     return;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option.");
             }
         }
     }
@@ -744,9 +681,7 @@ public class AdminPanel {
 
             // Prevent admin from deleting themselves
             if (userId == loggedInAdmin.getId()) {
-                Table errorTable = new Table(1);
-                errorTable.addCell("You cannot delete your own account.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("You cannot delete your own account.");
                 return;
             }
 
@@ -755,44 +690,33 @@ public class AdminPanel {
             String confirm = scanner.nextLine().trim().toLowerCase();
 
             if (!confirm.equals("y")) {
-                Table cancelTable = new Table(1);
-                cancelTable.addCell("Deletion cancelled.");
-                System.out.println(cancelTable.render());
+                UiUtils.printMessage("Deletion cancelled.");
                 return;
             }
 
             boolean deleted = userService.deleteUser(userId);
 
             if (deleted) {
-                Table successTable = new Table(1);
-                successTable.addCell("✓ User deleted successfully.");
-                System.out.println(successTable.render());
+                UiUtils.printSuccess("User deleted successfully.");
             } else {
-                Table errorTable = new Table(1);
-                errorTable.addCell("Failed to delete user. User may not exist.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Failed to delete user. User may not exist.");
             }
 
         } catch (NumberFormatException e) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Invalid user ID format.");
-            System.out.println(errorTable.render());
+            UiUtils.printError("Invalid user ID format.");
         }
     }
 
     // ==================== BOOKING MANAGEMENT ====================
     private void bookingManagement() throws SQLException {
         while (true) {
-            Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-            headerTable.addCell("BOOKING MANAGEMENT");
-            System.out.println(headerTable.render());
+            UiUtils.printHeader("BOOKING MANAGEMENT");
 
-            Table menuTable = new Table(1, BorderStyle.UNICODE_BOX);
-            menuTable.addCell("1. View all bookings");
-            menuTable.addCell("2. View pending bookings");
-            menuTable.addCell("3. Approve/Reject booking");
-            menuTable.addCell("4. Back to admin menu");
-            System.out.println(menuTable.render());
+            UiUtils.printMenu(null,
+                    "1. View all bookings",
+                    "2. View pending bookings",
+                    "3. Approve/Reject booking",
+                    "4. Back to admin menu");
 
             System.out.print("Select an option (1-4): ");
             String choice = scanner.nextLine().trim();
@@ -810,9 +734,7 @@ public class AdminPanel {
                 case "4":
                     return;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option. Please try again.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option. Please try again.");
             }
         }
     }
@@ -820,20 +742,16 @@ public class AdminPanel {
     private void viewAllBookings() throws SQLException {
         List<Booking> bookings = bookingService.getAllBookings();
 
-        Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-        headerTable.addCell("ALL BOOKINGS");
-        System.out.println(headerTable.render());
+        UiUtils.printHeader("ALL BOOKINGS");
 
         if (bookings.isEmpty()) {
-            Table emptyTable = new Table(1);
-            emptyTable.addCell("No bookings found.");
-            System.out.println(emptyTable.render());
+            UiUtils.printMessage("No bookings found.");
             System.out.println("\nPress Enter to continue...");
             scanner.nextLine();
             return;
         }
 
-        Table table = new Table(7);
+        Table table = UiUtils.createDataTable(7);
         table.addCell("ID");
         table.addCell("User");
         table.addCell("Room");
@@ -860,20 +778,16 @@ public class AdminPanel {
     private void viewPendingBookings() throws SQLException {
         List<Booking> pendingBookings = bookingService.getPendingBookings();
 
-        Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-        headerTable.addCell("PENDING BOOKINGS");
-        System.out.println(headerTable.render());
+        UiUtils.printHeader("PENDING BOOKINGS");
 
         if (pendingBookings.isEmpty()) {
-            Table emptyTable = new Table(1);
-            emptyTable.addCell("No pending bookings found.");
-            System.out.println(emptyTable.render());
+            UiUtils.printMessage("No pending bookings found.");
             System.out.println("\nPress Enter to continue...");
             scanner.nextLine();
             return;
         }
 
-        Table table = new Table(7);
+        Table table = UiUtils.createDataTable(7);
         table.addCell("ID");
         table.addCell("User");
         table.addCell("Room");
@@ -900,21 +814,17 @@ public class AdminPanel {
     private void approveOrRejectBooking() throws SQLException {
         List<Booking> pendingBookings = bookingService.getPendingBookings();
 
-        Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-        headerTable.addCell("APPROVE/REJECT BOOKING");
-        System.out.println(headerTable.render());
+        UiUtils.printHeader("APPROVE/REJECT BOOKING");
 
         if (pendingBookings.isEmpty()) {
-            Table emptyTable = new Table(1);
-            emptyTable.addCell("No pending bookings to process.");
-            System.out.println(emptyTable.render());
+            UiUtils.printMessage("No pending bookings to process.");
             System.out.println("\nPress Enter to continue...");
             scanner.nextLine();
             return;
         }
 
         // Show pending bookings
-        Table table = new Table(7);
+        Table table = UiUtils.createDataTable(7);
         table.addCell("ID");
         table.addCell("User");
         table.addCell("Room");
@@ -946,16 +856,14 @@ public class AdminPanel {
                     .orElse(null);
 
             if (booking == null) {
-                Table errorTable = new Table(1);
-                errorTable.addCell("Pending booking not found with that ID.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Pending booking not found with that ID.");
                 System.out.println("\nPress Enter to continue...");
                 scanner.nextLine();
                 return;
             }
 
             // Show booking details
-            Table detailTable = new Table(2);
+            Table detailTable = UiUtils.createDataTable(2);
             detailTable.addCell("Booking ID:");
             detailTable.addCell(String.valueOf(booking.getId()));
             detailTable.addCell("User:");
@@ -977,13 +885,9 @@ public class AdminPanel {
             if (action.equals("a")) {
                 boolean approved = bookingService.approveBooking(bookingId);
                 if (approved) {
-                    Table successTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-                    successTable.addCell("BOOKING APPROVED!");
-                    System.out.println(successTable.render());
+                    UiUtils.printSuccess("BOOKING APPROVED!");
                 } else {
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Failed to approve booking.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Failed to approve booking.");
                 }
             } else if (action.equals("r")) {
                 // Confirm rejection
@@ -993,29 +897,19 @@ public class AdminPanel {
                 if (confirm.equals("y")) {
                     boolean rejected = bookingService.rejectBooking(bookingId);
                     if (rejected) {
-                        Table successTable = new Table(1);
-                        successTable.addCell("Booking rejected.");
-                        System.out.println(successTable.render());
+                        UiUtils.printMessage("Booking rejected.");
                     } else {
-                        Table errorTable = new Table(1);
-                        errorTable.addCell("Failed to reject booking.");
-                        System.out.println(errorTable.render());
+                        UiUtils.printError("Failed to reject booking.");
                     }
                 } else {
-                    Table cancelTable = new Table(1);
-                    cancelTable.addCell("Rejection cancelled.");
-                    System.out.println(cancelTable.render());
+                    UiUtils.printMessage("Rejection cancelled.");
                 }
             } else {
-                Table errorTable = new Table(1);
-                errorTable.addCell("Invalid action. Please enter 'a' or 'r'.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Invalid action. Please enter 'a' or 'r'.");
             }
 
         } catch (NumberFormatException e) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("Invalid booking ID format.");
-            System.out.println(errorTable.render());
+            UiUtils.printError("Invalid booking ID format.");
         }
 
         System.out.println("\nPress Enter to continue...");

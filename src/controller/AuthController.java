@@ -2,9 +2,9 @@ package controller;
 
 import model.entities.User;
 import model.service.UserService;
-import org.nocrala.tools.texttablefmt.BorderStyle;
+import view.UiUtils;
 import view.UserPanel;
-import org.nocrala.tools.texttablefmt.Table;
+
 import java.sql.SQLException;
 import java.util.Scanner;
 
@@ -19,14 +19,10 @@ public class AuthController {
 
     public void showLoginMenu() throws SQLException {
         while (true) {
-            Table headerTable = new Table(1 , BorderStyle.UNICODE_BOX_HEAVY_BORDER);
-            headerTable.addCell("HOTEL RESERVATION SYSTEM");
-            System.out.println(headerTable.render());
-
-            Table menuTable = new Table(1 , BorderStyle.UNICODE_BOX);
-            menuTable.addCell("1. Login");
-            menuTable.addCell("2. Exit");
-            System.out.println(menuTable.render());
+            UiUtils.printHeader("HOTEL RESERVATION SYSTEM");
+            UiUtils.printMenu(null,
+                    "1. Login",
+                    "2. Exit");
 
             System.out.print("Select an option (1-2): ");
             String choice = scanner.nextLine().trim();
@@ -36,23 +32,17 @@ public class AuthController {
                     handleLogin();
                     break;
                 case "2":
-                    Table footerTable = new Table(1);
-                    footerTable.addCell("Thank you for using our system. Goodbye!");
-                    System.out.println(footerTable.render());
+                    UiUtils.printMessage("Thank you for using our system. Goodbye!");
                     System.exit(0);
                     break;
                 default:
-                    Table errorTable = new Table(1);
-                    errorTable.addCell("Invalid option. Please try again.");
-                    System.out.println(errorTable.render());
+                    UiUtils.printError("Invalid option. Please try again.");
             }
         }
     }
 
     private void handleLogin() throws SQLException {
-        Table headerTable = new Table(1);
-        headerTable.addCell("LOGIN");
-        System.out.println(headerTable.render());
+        UiUtils.printHeader("LOGIN");
 
         System.out.print("Username: ");
         String username = scanner.nextLine().trim();
@@ -63,9 +53,7 @@ public class AuthController {
         try {
             User user = userService.login(username, password);
             if (user != null && (user.getRole().equals("USER") || user.getRole().equals("ADMIN"))) {
-                Table successTable = new Table(1);
-                successTable.addCell("✓ Login successful! Welcome, " + user.getUsername() + " (" + user.getRole() + ")");
-                System.out.println(successTable.render());
+                UiUtils.printSuccess("Login successful! Welcome, " + user.getUsername() + " (" + user.getRole() + ")");
 
                 if (user.getRole().equals("ADMIN")) {
                     // Enter admin panel
@@ -80,18 +68,12 @@ public class AuthController {
                 // After returning, back to login menu
                 return;
             } else {
-                Table errorTable = new Table(1);
-                errorTable.addCell("✗ Invalid username or password. Please try again.");
-                System.out.println(errorTable.render());
+                UiUtils.printError("Invalid username or password. Please try again.");
             }
         } catch (SQLException e) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("✗ Database error: " + e.getMessage());
-            System.out.println(errorTable.render());
+            UiUtils.printError("Database error: " + e.getMessage());
         } catch (Exception e) {
-            Table errorTable = new Table(1);
-            errorTable.addCell("✗ Login error: " + e.getMessage());
-            System.out.println(errorTable.render());
+            UiUtils.printError("Login error: " + e.getMessage());
         }
     }
 }
