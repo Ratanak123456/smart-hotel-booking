@@ -22,9 +22,10 @@ public class AuthController {
             UiUtils.printHeader("HOTEL RESERVATION SYSTEM");
             UiUtils.printMenu(null,
                     "1. Login",
-                    "2. Exit");
+                    "2. Register",
+                    "3. Exit");
 
-            System.out.print("Select an option (1-2): ");
+            System.out.print("Select an option (1-3): ");
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
@@ -32,12 +33,47 @@ public class AuthController {
                     handleLogin();
                     break;
                 case "2":
+                    handleRegister();
+                    break;
+                case "3":
                     UiUtils.printMessage("Thank you for using our system. Goodbye!");
                     System.exit(0);
                     break;
                 default:
                     UiUtils.printError("Invalid option. Please try again.");
             }
+        }
+    }
+
+    private void handleRegister() {
+        UiUtils.printHeader("USER REGISTRATION");
+
+        System.out.print("Username: ");
+        String username = scanner.nextLine().trim();
+
+        System.out.print("Email: ");
+        String email = scanner.nextLine().trim();
+
+        System.out.print("Phone Number: ");
+        String phoneNumber = scanner.nextLine().trim();
+
+        System.out.print("Password: ");
+        String password = scanner.nextLine().trim();
+
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            UiUtils.printError("Username, Email, and Password are required.");
+            return;
+        }
+
+        try {
+            boolean success = userService.register(username, email, phoneNumber, password);
+            if (success) {
+                UiUtils.printSuccess("Registration successful! You can now login.");
+            } else {
+                UiUtils.printError("Registration failed. Please try again.");
+            }
+        } catch (Exception e) {
+            UiUtils.printError("Registration error: " + e.getMessage());
         }
     }
 

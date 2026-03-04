@@ -18,6 +18,25 @@ public class UserService {
         return null;
     }
 
+    public boolean register(String username, String email, String phoneNumber, String password) throws Exception {
+        // Check if username or email already exists
+        if (userDAO.findByUsername(username) != null) {
+            throw new Exception("Username is already taken.");
+        }
+        if (userDAO.findByEmail(email) != null) {
+            throw new Exception("Email is already registered.");
+        }
+
+        User newUser = new User();
+        newUser.setUsername(username);
+        newUser.setEmail(email);
+        newUser.setPhoneNumber(phoneNumber);
+        newUser.setPasswordHash(password); // In a real app, hash this!
+        newUser.setRole("USER"); // Default to USER as requested
+
+        return userDAO.save(newUser);
+    }
+
     public List<User> getAllUsersPaginated(int page) throws SQLException {
         int offset = (page - 1) * ROWS_PER_PAGE;
         return userDAO.findAllPaginated(ROWS_PER_PAGE, offset);
