@@ -102,7 +102,6 @@ public class AuthController {
                 }
 
                 // After returning, back to login menu
-                return;
             } else {
                 UiUtils.printError("Invalid username or password. Please try again.");
             }
