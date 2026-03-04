@@ -1,9 +1,11 @@
 package view;
 
 import model.entities.User;
+import model.entities.Room;
+import model.entities.Booking;
 import model.service.RoomService;
 import model.service.UserService;
-import model.entities.Room;
+import model.service.BookingService;
 import org.nocrala.tools.texttablefmt.BorderStyle;
 import org.nocrala.tools.texttablefmt.Table;
 
@@ -15,12 +17,14 @@ public class AdminPanel {
     private User loggedInAdmin;
     private RoomService roomService;
     private UserService userService;
+    private BookingService bookingService;
     private Scanner scanner;
 
     public AdminPanel(User admin) {
         this.loggedInAdmin = admin;
         this.roomService = new RoomService();
         this.userService = new UserService();
+        this.bookingService = new BookingService();
         this.scanner = new Scanner(System.in);
     }
 
@@ -33,10 +37,11 @@ public class AdminPanel {
             Table menuTable = new Table(1, BorderStyle.UNICODE_BOX);
             menuTable.addCell("1. Room Management");
             menuTable.addCell("2. User Management");
-            menuTable.addCell("3. Logout");
+            menuTable.addCell("3. Booking Management");
+            menuTable.addCell("4. Logout");
             System.out.println(menuTable.render());
 
-            System.out.print("Select an option (1-3): ");
+            System.out.print("Select an option (1-4): ");
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
@@ -47,6 +52,9 @@ public class AdminPanel {
                     userManagement();
                     break;
                 case "3":
+                    bookingManagement();
+                    break;
+                case "4":
                     Table logoutTable = new Table(1);
                     logoutTable.addCell("Logged out successfully.");
                     System.out.println(logoutTable.render());
@@ -770,5 +778,247 @@ public class AdminPanel {
             errorTable.addCell("Invalid user ID format.");
             System.out.println(errorTable.render());
         }
+    }
+
+    // ==================== BOOKING MANAGEMENT ====================
+    private void bookingManagement() throws SQLException {
+        while (true) {
+            Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
+            headerTable.addCell("BOOKING MANAGEMENT");
+            System.out.println(headerTable.render());
+
+            Table menuTable = new Table(1, BorderStyle.UNICODE_BOX);
+            menuTable.addCell("1. View all bookings");
+            menuTable.addCell("2. View pending bookings");
+            menuTable.addCell("3. Approve/Reject booking");
+            menuTable.addCell("4. Back to admin menu");
+            System.out.println(menuTable.render());
+
+            System.out.print("Select an option (1-4): ");
+            String choice = scanner.nextLine().trim();
+
+            switch (choice) {
+                case "1":
+                    viewAllBookings();
+                    break;
+                case "2":
+                    viewPendingBookings();
+                    break;
+                case "3":
+                    approveOrRejectBooking();
+                    break;
+                case "4":
+                    return;
+                default:
+                    Table errorTable = new Table(1);
+                    errorTable.addCell("Invalid option. Please try again.");
+                    System.out.println(errorTable.render());
+            }
+        }
+    }
+
+    private void viewAllBookings() throws SQLException {
+        List<Booking> bookings = bookingService.getAllBookings();
+
+        Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
+        headerTable.addCell("ALL BOOKINGS");
+        System.out.println(headerTable.render());
+
+        if (bookings.isEmpty()) {
+            Table emptyTable = new Table(1);
+            emptyTable.addCell("No bookings found.");
+            System.out.println(emptyTable.render());
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
+            return;
+        }
+
+        Table table = new Table(7);
+        table.addCell("ID");
+        table.addCell("User");
+        table.addCell("Room");
+        table.addCell("Check-in");
+        table.addCell("Check-out");
+        table.addCell("Total");
+        table.addCell("Status");
+
+        for (Booking booking : bookings) {
+            table.addCell(String.valueOf(booking.getId()));
+            table.addCell(booking.getUsername());
+            table.addCell(booking.getRoomNumber());
+            table.addCell(booking.getCheckInDate().toString());
+            table.addCell(booking.getCheckOutDate().toString());
+            table.addCell("$" + booking.getTotalPrice());
+            table.addCell(booking.getStatus().name());
+        }
+        System.out.println(table.render());
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private void viewPendingBookings() throws SQLException {
+        List<Booking> pendingBookings = bookingService.getPendingBookings();
+
+        Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
+        headerTable.addCell("PENDING BOOKINGS");
+        System.out.println(headerTable.render());
+
+        if (pendingBookings.isEmpty()) {
+            Table emptyTable = new Table(1);
+            emptyTable.addCell("No pending bookings found.");
+            System.out.println(emptyTable.render());
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
+            return;
+        }
+
+        Table table = new Table(7);
+        table.addCell("ID");
+        table.addCell("User");
+        table.addCell("Room");
+        table.addCell("Check-in");
+        table.addCell("Check-out");
+        table.addCell("Total");
+        table.addCell("Status");
+
+        for (Booking booking : pendingBookings) {
+            table.addCell(String.valueOf(booking.getId()));
+            table.addCell(booking.getUsername());
+            table.addCell(booking.getRoomNumber());
+            table.addCell(booking.getCheckInDate().toString());
+            table.addCell(booking.getCheckOutDate().toString());
+            table.addCell("$" + booking.getTotalPrice());
+            table.addCell(booking.getStatus().name());
+        }
+        System.out.println(table.render());
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
+    }
+
+    private void approveOrRejectBooking() throws SQLException {
+        List<Booking> pendingBookings = bookingService.getPendingBookings();
+
+        Table headerTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
+        headerTable.addCell("APPROVE/REJECT BOOKING");
+        System.out.println(headerTable.render());
+
+        if (pendingBookings.isEmpty()) {
+            Table emptyTable = new Table(1);
+            emptyTable.addCell("No pending bookings to process.");
+            System.out.println(emptyTable.render());
+            System.out.println("\nPress Enter to continue...");
+            scanner.nextLine();
+            return;
+        }
+
+        // Show pending bookings
+        Table table = new Table(7);
+        table.addCell("ID");
+        table.addCell("User");
+        table.addCell("Room");
+        table.addCell("Check-in");
+        table.addCell("Check-out");
+        table.addCell("Total");
+        table.addCell("Status");
+
+        for (Booking booking : pendingBookings) {
+            table.addCell(String.valueOf(booking.getId()));
+            table.addCell(booking.getUsername());
+            table.addCell(booking.getRoomNumber());
+            table.addCell(booking.getCheckInDate().toString());
+            table.addCell(booking.getCheckOutDate().toString());
+            table.addCell("$" + booking.getTotalPrice());
+            table.addCell(booking.getStatus().name());
+        }
+        System.out.println(table.render());
+
+        // Get booking ID
+        System.out.print("\nEnter Booking ID to process: ");
+        String bookingIdStr = scanner.nextLine().trim();
+
+        try {
+            int bookingId = Integer.parseInt(bookingIdStr);
+            Booking booking = pendingBookings.stream()
+                    .filter(b -> b.getId() == bookingId)
+                    .findFirst()
+                    .orElse(null);
+
+            if (booking == null) {
+                Table errorTable = new Table(1);
+                errorTable.addCell("Pending booking not found with that ID.");
+                System.out.println(errorTable.render());
+                System.out.println("\nPress Enter to continue...");
+                scanner.nextLine();
+                return;
+            }
+
+            // Show booking details
+            Table detailTable = new Table(2);
+            detailTable.addCell("Booking ID:");
+            detailTable.addCell(String.valueOf(booking.getId()));
+            detailTable.addCell("User:");
+            detailTable.addCell(booking.getUsername() + " (" + booking.getUserEmail() + ")");
+            detailTable.addCell("Room:");
+            detailTable.addCell(booking.getRoomNumber() + " (" + booking.getRoomTypeName() + ")");
+            detailTable.addCell("Check-in:");
+            detailTable.addCell(booking.getCheckInDate().toString());
+            detailTable.addCell("Check-out:");
+            detailTable.addCell(booking.getCheckOutDate().toString());
+            detailTable.addCell("Total:");
+            detailTable.addCell("$" + booking.getTotalPrice());
+            System.out.println(detailTable.render());
+
+            // Approve or reject
+            System.out.print("Approve (a) or Reject (r)? ");
+            String action = scanner.nextLine().trim().toLowerCase();
+
+            if (action.equals("a")) {
+                boolean approved = bookingService.approveBooking(bookingId);
+                if (approved) {
+                    Table successTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
+                    successTable.addCell("BOOKING APPROVED!");
+                    System.out.println(successTable.render());
+                } else {
+                    Table errorTable = new Table(1);
+                    errorTable.addCell("Failed to approve booking.");
+                    System.out.println(errorTable.render());
+                }
+            } else if (action.equals("r")) {
+                // Confirm rejection
+                System.out.print("Are you sure you want to reject this booking? (y/n): ");
+                String confirm = scanner.nextLine().trim().toLowerCase();
+
+                if (confirm.equals("y")) {
+                    boolean rejected = bookingService.rejectBooking(bookingId);
+                    if (rejected) {
+                        Table successTable = new Table(1);
+                        successTable.addCell("Booking rejected.");
+                        System.out.println(successTable.render());
+                    } else {
+                        Table errorTable = new Table(1);
+                        errorTable.addCell("Failed to reject booking.");
+                        System.out.println(errorTable.render());
+                    }
+                } else {
+                    Table cancelTable = new Table(1);
+                    cancelTable.addCell("Rejection cancelled.");
+                    System.out.println(cancelTable.render());
+                }
+            } else {
+                Table errorTable = new Table(1);
+                errorTable.addCell("Invalid action. Please enter 'a' or 'r'.");
+                System.out.println(errorTable.render());
+            }
+
+        } catch (NumberFormatException e) {
+            Table errorTable = new Table(1);
+            errorTable.addCell("Invalid booking ID format.");
+            System.out.println(errorTable.render());
+        }
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 }

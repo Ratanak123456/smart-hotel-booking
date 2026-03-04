@@ -72,9 +72,9 @@ public class AuthController {
                     view.AdminPanel adminPanel = new view.AdminPanel(user);
                     adminPanel.start();
                 } else {
-                    // Enter room listing panel
+                    // Enter user panel with booking features
                     UserPanel userPanel = new UserPanel(user);
-                    userPanel.startRoomListing();
+                    userPanel.start();
                 }
 
                 // After returning, back to login menu
