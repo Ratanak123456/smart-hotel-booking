@@ -15,14 +15,7 @@ public class UserDao {
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                User user = new User();
-                user.setId(rs.getInt("id"));
-                user.setUsername(rs.getString("username"));
-                user.setEmail(rs.getString("email"));
-                user.setPhoneNumber(rs.getString("phone_number"));
-                user.setPasswordHash(rs.getString("password_hash"));
-                user.setRole(rs.getString("role"));
-                return user;
+                return mapResultSetToUser(rs);
             }
         }
         return null;
@@ -35,14 +28,7 @@ public class UserDao {
             stmt.setString(1, email);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                User user = new User();
-                user.setId(rs.getInt("id"));
-                user.setUsername(rs.getString("username"));
-                user.setEmail(rs.getString("email"));
-                user.setPhoneNumber(rs.getString("phone_number"));
-                user.setPasswordHash(rs.getString("password_hash"));
-                user.setRole(rs.getString("role"));
-                return user;
+                return mapResultSetToUser(rs);
             }
         }
         return null;
@@ -57,13 +43,7 @@ public class UserDao {
             stmt.setInt(2, offset);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                User u = new User();
-                u.setId(rs.getInt("id"));
-                u.setUsername(rs.getString("username"));
-                u.setEmail(rs.getString("email"));
-                u.setPhoneNumber(rs.getString("phone_number"));
-                u.setRole(rs.getString("role"));
-                users.add(u);
+                users.add(mapResultSetToUser(rs));
             }
         }
         return users;
@@ -91,13 +71,7 @@ public class UserDao {
             stmt.setInt(3, offset);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                User u = new User();
-                u.setId(rs.getInt("id"));
-                u.setUsername(rs.getString("username"));
-                u.setEmail(rs.getString("email"));
-                u.setPhoneNumber(rs.getString("phone_number"));
-                u.setRole(rs.getString("role"));
-                users.add(u);
+                users.add(mapResultSetToUser(rs));
             }
         }
         return users;
@@ -126,7 +100,7 @@ public class UserDao {
     }
 
     public boolean save(User user) throws SQLException {
-        String sql = "INSERT INTO users (username, email, phone_number, password_hash, role) VALUES (?, ?, ?, ?, ?::user_role_enum)";
+        String sql = "INSERT INTO users (username, email, phone_number, password_hash, role, telegram_chat_id) VALUES (?, ?, ?, ?, ?::user_role_enum, ?)";
         try (Connection conn = DbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.getUsername());
@@ -134,7 +108,37 @@ public class UserDao {
             stmt.setString(3, user.getPhoneNumber());
             stmt.setString(4, user.getPasswordHash());
             stmt.setString(5, user.getRole() == null ? "USER" : user.getRole());
+            if (user.getTelegramChatId() != null) {
+                stmt.setLong(6, user.getTelegramChatId());
+            } else {
+                stmt.setNull(6, Types.BIGINT);
+            }
             return stmt.executeUpdate() > 0;
         }
+    }
+
+    public boolean updateTelegramChatId(int userId, long chatId) throws SQLException {
+        String sql = "UPDATE users SET telegram_chat_id = ? WHERE id = ?";
+        try (Connection conn = DbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, chatId);
+            stmt.setInt(2, userId);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    private User mapResultSetToUser(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setId(rs.getInt("id"));
+        user.setUsername(rs.getString("username"));
+        user.setEmail(rs.getString("email"));
+        user.setPhoneNumber(rs.getString("phone_number"));
+        user.setPasswordHash(rs.getString("password_hash"));
+        user.setRole(rs.getString("role"));
+        long telegramId = rs.getLong("telegram_chat_id");
+        if (!rs.wasNull()) {
+            user.setTelegramChatId(telegramId);
+        }
+        return user;
     }
 }

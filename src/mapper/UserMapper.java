@@ -11,7 +11,8 @@ public class UserMapper {
             user.getUsername(),
             user.getEmail(),
             user.getPhoneNumber(),
-            user.getRole()
+            user.getRole(),
+            user.getTelegramChatId()
         );
     }
 
@@ -23,6 +24,7 @@ public class UserMapper {
         user.setEmail(dto.getEmail());
         user.setPhoneNumber(dto.getPhoneNumber());
         user.setRole(dto.getRole());
+        user.setTelegramChatId(dto.getTelegramChatId());
         return user;
     }
 }

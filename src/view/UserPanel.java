@@ -71,53 +71,7 @@ public class UserPanel {
     private void makeBooking() throws SQLException {
         UiUtils.printHeader("MAKE A BOOKING");
 
-        // Show available rooms first
-        List<Room> availableRooms = roomService.getRoomsByStatus("AVAILABLE", 1);
-        if (availableRooms.isEmpty()) {
-            UiUtils.printMessage("No rooms available for booking.");
-            return;
-        }
-
-        // Display available rooms
-        Table roomTable = UiUtils.createDataTable(5);
-        roomTable.addCell("ID");
-        roomTable.addCell("Room No");
-        roomTable.addCell("Type");
-        roomTable.addCell("Price/Night");
-        roomTable.addCell("Features");
-
-        List<Room> allAvailableRooms = roomService.getRoomsByStatus("AVAILABLE", 1);
-        for (Room room : allAvailableRooms) {
-            roomTable.addCell(String.valueOf(room.getId()));
-            roomTable.addCell(room.getRoomNumber());
-            roomTable.addCell(room.getRoomTypeName());
-            roomTable.addCell("$" + room.getPricePerNight());
-            String features = room.getDescription();
-            if (features == null || features.isEmpty()) features = "N/A";
-            else if (features.length() > 25) features = features.substring(0, 22) + "...";
-            roomTable.addCell(features);
-        }
-        System.out.println(roomTable.render());
-
-        // Get room ID
-        System.out.print("\nEnter Room ID to book: ");
-        String roomIdStr = scanner.nextLine().trim();
-        int roomId;
-        try {
-            roomId = Integer.parseInt(roomIdStr);
-        } catch (NumberFormatException e) {
-            UiUtils.printError("Invalid room ID.");
-            return;
-        }
-
-        // Verify room exists and is available
-        Room selectedRoom = roomService.getRoomById(roomId);
-        if (selectedRoom == null || selectedRoom.getStatus() != Room.RoomStatus.AVAILABLE) {
-            UiUtils.printError("Room not found or not available.");
-            return;
-        }
-
-        // Get dates
+        // Get dates first
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         System.out.print("Check-in date (yyyy-MM-dd): ");
@@ -148,6 +102,50 @@ public class UserPanel {
 
         if (checkInDate.isBefore(LocalDate.now())) {
             UiUtils.printError("Check-in date cannot be in the past.");
+            return;
+        }
+
+        // Show available rooms for these dates
+        List<Room> availableRooms = roomService.getAvailableRoomsByDate(checkInDate, checkOutDate, 1);
+        if (availableRooms.isEmpty()) {
+            UiUtils.printMessage("No rooms available for the selected dates.");
+            return;
+        }
+
+        // Display available rooms
+        Table roomTable = UiUtils.createDataTable(4);
+        roomTable.addCell("Room No");
+        roomTable.addCell("Type");
+        roomTable.addCell("Price/Night");
+        roomTable.addCell("Features");
+
+        for (Room room : availableRooms) {
+            roomTable.addCell(room.getRoomNumber());
+            roomTable.addCell(room.getRoomTypeName());
+            roomTable.addCell("$" + room.getPricePerNight());
+            String features = room.getDescription();
+            if (features == null || features.isEmpty()) features = "N/A";
+            else if (features.length() > 25) features = features.substring(0, 22) + "...";
+            roomTable.addCell(features);
+        }
+        System.out.println(roomTable.render());
+
+        // Get room number
+        System.out.print("\nEnter Room Number to book (or press Enter to cancel): ");
+        String roomNumber = scanner.nextLine().trim();
+        if (roomNumber.isEmpty()) return;
+
+        // Verify room exists and is available for these dates
+        Room selectedRoom = roomService.getRoomByNumber(roomNumber);
+        if (selectedRoom == null) {
+            UiUtils.printError("Room not found.");
+            return;
+        }
+
+        // Double check availability (to prevent race conditions or invalid selection)
+        boolean isAvailable = availableRooms.stream().anyMatch(r -> r.getRoomNumber().equals(roomNumber));
+        if (!isAvailable) {
+            UiUtils.printError("Selected room is not available for these dates.");
             return;
         }
 
@@ -192,7 +190,7 @@ public class UserPanel {
         try {
             Booking booking = new Booking();
             booking.setUserId(loggedInUser.getId());
-            booking.setRoomId(roomId);
+            booking.setRoomId(selectedRoom.getId());
             booking.setCheckInDate(checkInDate);
             booking.setCheckOutDate(checkOutDate);
             booking.setUsername(loggedInUser.getUsername());
@@ -413,9 +411,10 @@ public class UserPanel {
                     "3. Filter by availability status",
                     "4. Filter by type AND status",
                     "5. View detailed room features",
-                    "6. Back to login");
+                    "6. SEARCH AVAILABLE BY DATE",
+                    "7. Back to login");
 
-            System.out.print("Select an option (1-6): ");
+            System.out.print("Select an option (1-7): ");
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
@@ -435,10 +434,99 @@ public class UserPanel {
                     viewDetailedRoomFeatures();
                     break;
                 case "6":
+                    searchByDate();
+                    break;
+                case "7":
                     return; // back to login menu
                 default:
                     UiUtils.printError("Invalid option. Please try again.");
             }
+        }
+    }
+
+    private void searchByDate() throws SQLException {
+        UiUtils.printHeader("SEARCH BY DATE");
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        System.out.print("Check-in date (yyyy-MM-dd): ");
+        String checkInStr = scanner.nextLine().trim();
+        LocalDate checkInDate;
+        try {
+            checkInDate = LocalDate.parse(checkInStr, formatter);
+        } catch (DateTimeParseException e) {
+            UiUtils.printError("Invalid date format.");
+            return;
+        }
+
+        System.out.print("Check-out date (yyyy-MM-dd): ");
+        String checkOutStr = scanner.nextLine().trim();
+        LocalDate checkOutDate;
+        try {
+            checkOutDate = LocalDate.parse(checkOutStr, formatter);
+        } catch (DateTimeParseException e) {
+            UiUtils.printError("Invalid date format.");
+            return;
+        }
+
+        if (!checkOutDate.isAfter(checkInDate)) {
+            UiUtils.printError("Check-out date must be after check-in date.");
+            return;
+        }
+
+        displayAvailableRoomsByDatePaginated(checkInDate, checkOutDate);
+    }
+
+    private void displayAvailableRoomsByDatePaginated(LocalDate checkIn, LocalDate checkOut) throws SQLException {
+        int pageNumber = 1;
+        int rowsPerPage = 5;
+
+        while (true) {
+            List<Room> rooms = roomService.getAvailableRoomsByDate(checkIn, checkOut, pageNumber);
+            long totalCount = roomService.getAvailableRoomCountByDate(checkIn, checkOut);
+            int totalPages = (int) Math.ceil((double) totalCount / rowsPerPage);
+
+            UiUtils.printHeader("AVAILABLE ROOMS [" + checkIn + " to " + checkOut + "] (Page " + pageNumber + "/" + totalPages + ")");
+
+            if (rooms.isEmpty()) {
+                UiUtils.printMessage("No rooms available for the selected dates.");
+            } else {
+                Table table = UiUtils.createDataTable(5);
+                table.addCell("Room No");
+                table.addCell("Type");
+                table.addCell("Price/Night");
+                table.addCell("Current Status");
+                table.addCell("Features");
+
+                for (Room room : rooms) {
+                    table.addCell(room.getRoomNumber());
+                    table.addCell(room.getRoomTypeName());
+                    table.addCell("$" + room.getPricePerNight());
+                    table.addCell(String.valueOf(room.getStatus()));
+
+                    String features = room.getDescription();
+                    if (features == null || features.isEmpty()) {
+                        features = "No features listed";
+                    } else if (features.length() > 30) {
+                        features = features.substring(0, 27) + "...";
+                    }
+                    table.addCell(features);
+                }
+                System.out.println(table.render());
+            }
+
+            // Navigation (simplified for brevity)
+            if (totalPages > 1) {
+                UiUtils.printMenu(null, "p - Previous", "n - Next", "b - Back");
+            } else {
+                UiUtils.printMenu(null, "b - Back");
+            }
+
+            System.out.print("Choose: ");
+            String navChoice = scanner.nextLine().trim().toLowerCase();
+            if (navChoice.equals("p") && pageNumber > 1) pageNumber--;
+            else if (navChoice.equals("n") && pageNumber < totalPages) pageNumber++;
+            else if (navChoice.equals("b")) return;
         }
     }
 
@@ -554,8 +642,7 @@ public class UserPanel {
             if (rooms.isEmpty()) {
                 UiUtils.printMessage("No rooms found.");
             } else {
-                Table table = UiUtils.createDataTable(6);
-                table.addCell("ID");
+                Table table = UiUtils.createDataTable(5);
                 table.addCell("Room No");
                 table.addCell("Type");
                 table.addCell("Price/Night");
@@ -563,7 +650,6 @@ public class UserPanel {
                 table.addCell("Features");
 
                 for (Room room : rooms) {
-                    table.addCell(String.valueOf(room.getId()));
                     table.addCell(room.getRoomNumber());
                     table.addCell(room.getRoomTypeName());
                     table.addCell("$" + room.getPricePerNight());
@@ -629,8 +715,7 @@ public class UserPanel {
             if (rooms.isEmpty()) {
                 UiUtils.printMessage("No rooms found matching your criteria.");
             } else {
-                Table table = UiUtils.createDataTable(6);
-                table.addCell("ID");
+                Table table = UiUtils.createDataTable(5);
                 table.addCell("Room No");
                 table.addCell("Type");
                 table.addCell("Price/Night");
@@ -638,7 +723,6 @@ public class UserPanel {
                 table.addCell("Features");
 
                 for (Room room : rooms) {
-                    table.addCell(String.valueOf(room.getId()));
                     table.addCell(room.getRoomNumber());
                     table.addCell(room.getRoomTypeName());
                     table.addCell("$" + room.getPricePerNight());
@@ -687,15 +771,13 @@ public class UserPanel {
         UiUtils.printHeader("ROOM DETAILS WITH COMPLETE FEATURES");
 
         List<Room> rooms = roomService.getAllRoomsPaginated(1);
-        Table listTable = UiUtils.createDataTable(5);
-        listTable.addCell("ID");
+        Table listTable = UiUtils.createDataTable(4);
         listTable.addCell("Room No");
         listTable.addCell("Type");
         listTable.addCell("Price/Night");
         listTable.addCell("Status");
 
         for (Room room : rooms) {
-            listTable.addCell(String.valueOf(room.getId()));
             listTable.addCell(room.getRoomNumber());
             listTable.addCell(room.getRoomTypeName());
             listTable.addCell("$" + room.getPricePerNight());
@@ -703,40 +785,32 @@ public class UserPanel {
         }
         System.out.println(listTable.render());
 
-        System.out.print("\nEnter Room ID to view complete features: ");
-        String roomIdStr = scanner.nextLine().trim();
+        System.out.print("\nEnter Room Number to view complete features: ");
+        String roomNum = scanner.nextLine().trim();
 
-        try {
-            int roomId = Integer.parseInt(roomIdStr);
-            Room room = roomService.getRoomById(roomId);
+        Room room = roomService.getRoomByNumber(roomNum);
 
-            if (room == null) {
-                UiUtils.printError("Room not found.");
-                return;
-            }
-
-            UiUtils.printHeader("COMPLETE ROOM DETAILS");
-
-            Table detailTable = UiUtils.createDataTable(2);
-            detailTable.addCell("Room ID:");
-            detailTable.addCell(String.valueOf(room.getId()));
-            detailTable.addCell("Room Number:");
-            detailTable.addCell(room.getRoomNumber());
-            detailTable.addCell("Room Type:");
-            detailTable.addCell(room.getRoomTypeName());
-            detailTable.addCell("Price per Night:");
-            detailTable.addCell("$" + room.getPricePerNight());
-            detailTable.addCell("Status:");
-            detailTable.addCell(String.valueOf(room.getStatus()));
-            detailTable.addCell("Features:");
-            detailTable.addCell(room.getDescription() != null ? room.getDescription() : "No features listed");
-            System.out.println(detailTable.render());
-
-            System.out.println("\nPress Enter to continue...");
-            scanner.nextLine();
-
-        } catch (NumberFormatException e) {
-            UiUtils.printError("Invalid room ID format.");
+        if (room == null) {
+            UiUtils.printError("Room not found.");
+            return;
         }
+
+        UiUtils.printHeader("COMPLETE ROOM DETAILS");
+
+        Table detailTable = UiUtils.createDataTable(2);
+        detailTable.addCell("Room Number:");
+        detailTable.addCell(room.getRoomNumber());
+        detailTable.addCell("Room Type:");
+        detailTable.addCell(room.getRoomTypeName());
+        detailTable.addCell("Price per Night:");
+        detailTable.addCell("$" + room.getPricePerNight());
+        detailTable.addCell("Status:");
+        detailTable.addCell(String.valueOf(room.getStatus()));
+        detailTable.addCell("Features:");
+        detailTable.addCell(room.getDescription() != null ? room.getDescription() : "No features listed");
+        System.out.println(detailTable.render());
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 }

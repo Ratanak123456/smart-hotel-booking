@@ -33,6 +33,10 @@ public class RoomService {
         return roomDao.getRoomById(roomId);
     }
 
+    public Room getRoomByNumber(String roomNumber) throws SQLException {
+        return roomDao.getRoomByNumber(roomNumber);
+    }
+
     public long getTotalRoomsCount() throws SQLException {
         return roomDao.getTotalRoomsCount();
     }
@@ -43,6 +47,15 @@ public class RoomService {
 
     public long getRoomCountByStatus(String status) throws SQLException {
         return roomDao.getRoomCountByStatus(status);
+    }
+
+    public List<Room> getAvailableRoomsByDate(java.time.LocalDate checkIn, java.time.LocalDate checkOut, int pageNumber) throws SQLException {
+        int offset = (pageNumber - 1) * PAGE_SIZE;
+        return roomDao.getAvailableRoomsByDate(checkIn, checkOut, PAGE_SIZE, offset);
+    }
+
+    public long getAvailableRoomCountByDate(java.time.LocalDate checkIn, java.time.LocalDate checkOut) throws SQLException {
+        return roomDao.getAvailableRoomCountByDate(checkIn, checkOut);
     }
 
     public List<Room> getAvailableRooms() throws SQLException {

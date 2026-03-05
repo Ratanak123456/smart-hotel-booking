@@ -214,8 +214,7 @@ public class AdminPanel {
             if (rooms.isEmpty()) {
                 UiUtils.printMessage("No rooms found.");
             } else {
-                Table table = UiUtils.createDataTable(6);
-                table.addCell("ID");
+                Table table = UiUtils.createDataTable(5);
                 table.addCell("Room No");
                 table.addCell("Type");
                 table.addCell("Price/Night");
@@ -223,7 +222,6 @@ public class AdminPanel {
                 table.addCell("Features");
 
                 for (Room room : rooms) {
-                    table.addCell(String.valueOf(room.getId()));
                     table.addCell(room.getRoomNumber());
                     table.addCell(room.getRoomTypeName());
                     table.addCell("$" + room.getPricePerNight());
@@ -290,8 +288,7 @@ public class AdminPanel {
             if (rooms.isEmpty()) {
                 UiUtils.printMessage("No rooms found matching your criteria.");
             } else {
-                Table table = UiUtils.createDataTable(6);
-                table.addCell("ID");
+                Table table = UiUtils.createDataTable(5);
                 table.addCell("Room No");
                 table.addCell("Type");
                 table.addCell("Price/Night");
@@ -299,7 +296,6 @@ public class AdminPanel {
                 table.addCell("Features");
 
                 for (Room room : rooms) {
-                    table.addCell(String.valueOf(room.getId()));
                     table.addCell(room.getRoomNumber());
                     table.addCell(room.getRoomTypeName());
                     table.addCell("$" + room.getPricePerNight());
@@ -385,8 +381,7 @@ public class AdminPanel {
             if (rooms.isEmpty()) {
                 UiUtils.printMessage("No rooms found.");
             } else {
-                Table table = UiUtils.createDataTable(6);
-                table.addCell("ID");
+                Table table = UiUtils.createDataTable(5);
                 table.addCell("Room No");
                 table.addCell("Type");
                 table.addCell("Price/Night");
@@ -394,7 +389,6 @@ public class AdminPanel {
                 table.addCell("Features");
 
                 for (Room room : rooms) {
-                    table.addCell(String.valueOf(room.getId()));
                     table.addCell(room.getRoomNumber());
                     table.addCell(room.getRoomTypeName());
                     table.addCell("$" + room.getPricePerNight());
@@ -443,15 +437,13 @@ public class AdminPanel {
         UiUtils.printHeader("ROOM DETAILS WITH COMPLETE FEATURES");
 
         List<Room> rooms = roomService.getAllRoomsPaginated(1);
-        Table listTable = UiUtils.createDataTable(5);
-        listTable.addCell("ID");
+        Table listTable = UiUtils.createDataTable(4);
         listTable.addCell("Room No");
         listTable.addCell("Type");
         listTable.addCell("Price/Night");
         listTable.addCell("Status");
 
         for (Room room : rooms) {
-            listTable.addCell(String.valueOf(room.getId()));
             listTable.addCell(room.getRoomNumber());
             listTable.addCell(room.getRoomTypeName());
             listTable.addCell("$" + room.getPricePerNight());
@@ -459,41 +451,33 @@ public class AdminPanel {
         }
         System.out.println(listTable.render());
 
-        System.out.print("\nEnter Room ID to view complete features: ");
-        String roomIdStr = scanner.nextLine().trim();
+        System.out.print("\nEnter Room Number to view complete features: ");
+        String roomNum = scanner.nextLine().trim();
 
-        try {
-            int roomId = Integer.parseInt(roomIdStr);
-            Room room = roomService.getRoomById(roomId);
+        Room room = roomService.getRoomByNumber(roomNum);
 
-            if (room == null) {
-                UiUtils.printError("Room not found.");
-                return;
-            }
-
-            UiUtils.printHeader("COMPLETE ROOM DETAILS");
-
-            Table detailTable = UiUtils.createDataTable(2);
-            detailTable.addCell("Room ID:");
-            detailTable.addCell(String.valueOf(room.getId()));
-            detailTable.addCell("Room Number:");
-            detailTable.addCell(room.getRoomNumber());
-            detailTable.addCell("Room Type:");
-            detailTable.addCell(room.getRoomTypeName());
-            detailTable.addCell("Price per Night:");
-            detailTable.addCell("$" + room.getPricePerNight());
-            detailTable.addCell("Status:");
-            detailTable.addCell(String.valueOf(room.getStatus()));
-            detailTable.addCell("Features:");
-            detailTable.addCell(room.getDescription() != null ? room.getDescription() : "No features listed");
-            System.out.println(detailTable.render());
-
-            System.out.println("\nPress Enter to continue...");
-            scanner.nextLine();
-
-        } catch (NumberFormatException e) {
-            UiUtils.printError("Invalid room ID format.");
+        if (room == null) {
+            UiUtils.printError("Room not found.");
+            return;
         }
+
+        UiUtils.printHeader("COMPLETE ROOM DETAILS");
+
+        Table detailTable = UiUtils.createDataTable(2);
+        detailTable.addCell("Room Number:");
+        detailTable.addCell(room.getRoomNumber());
+        detailTable.addCell("Room Type:");
+        detailTable.addCell(room.getRoomTypeName());
+        detailTable.addCell("Price per Night:");
+        detailTable.addCell("$" + room.getPricePerNight());
+        detailTable.addCell("Status:");
+        detailTable.addCell(String.valueOf(room.getStatus()));
+        detailTable.addCell("Features:");
+        detailTable.addCell(room.getDescription() != null ? room.getDescription() : "No features listed");
+        System.out.println(detailTable.render());
+
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 
     // ==================== USER MANAGEMENT ====================

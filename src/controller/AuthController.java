@@ -77,8 +77,11 @@ public class AuthController {
         }
     }
 
+    private int loginAttempts = 0;
+    private static final int MAX_ATTEMPTS = 3;
+
     private void handleLogin() throws SQLException {
-        UiUtils.printHeader("LOGIN");
+        UiUtils.printHeader("LOGIN (Attempt " + (loginAttempts + 1) + " of " + MAX_ATTEMPTS + ")");
 
         System.out.print("Username: ");
         String username = scanner.nextLine().trim();
@@ -90,6 +93,7 @@ public class AuthController {
             User user = userService.login(username, password);
             if (user != null && (user.getRole().equals("USER") || user.getRole().equals("ADMIN"))) {
                 UiUtils.printSuccess("Login successful! Welcome, " + user.getUsername() + " (" + user.getRole() + ")");
+                loginAttempts = 0; // Reset on success
 
                 if (user.getRole().equals("ADMIN")) {
                     // Enter admin panel
@@ -103,7 +107,15 @@ public class AuthController {
 
                 // After returning, back to login menu
             } else {
-                UiUtils.printError("Invalid username or password. Please try again.");
+                loginAttempts++;
+                UiUtils.printError("Invalid username or password.");
+
+                if (loginAttempts >= MAX_ATTEMPTS) {
+                    UiUtils.printError("Too many failed attempts. The program will now turn off.");
+                    System.exit(0);
+                } else {
+                    System.out.println("You have " + (MAX_ATTEMPTS - loginAttempts) + " attempts remaining.");
+                }
             }
         } catch (SQLException e) {
             UiUtils.printError("Database error: " + e.getMessage());

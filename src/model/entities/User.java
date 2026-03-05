@@ -9,18 +9,20 @@ public class User {
     private String phoneNumber;
     private String passwordHash;
     private String role; // 'USER' or 'ADMIN'
+    private Long telegramChatId;
     private Timestamp deletedAt;
 
     public User() {
     }
 
-    public User(int id, String username, String email, String phoneNumber, String passwordHash, String role, Timestamp deletedAt) {
+    public User(int id, String username, String email, String phoneNumber, String passwordHash, String role, Long telegramChatId, Timestamp deletedAt) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.passwordHash = passwordHash;
         this.role = role;
+        this.telegramChatId = telegramChatId;
         this.deletedAt = deletedAt;
     }
 
@@ -72,6 +74,14 @@ public class User {
         this.role = role;
     }
 
+    public Long getTelegramChatId() {
+        return telegramChatId;
+    }
+
+    public void setTelegramChatId(Long telegramChatId) {
+        this.telegramChatId = telegramChatId;
+    }
+
     public Timestamp getDeletedAt() {
         return deletedAt;
     }
@@ -89,6 +99,7 @@ public class User {
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", passwordHash='" + passwordHash + '\'' +
                 ", role='" + role + '\'' +
+                ", telegramChatId=" + telegramChatId +
                 ", deletedAt=" + deletedAt +
                 '}';
     }

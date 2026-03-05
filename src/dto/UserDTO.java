@@ -6,15 +6,17 @@ public class UserDTO {
     private String email;
     private String phoneNumber;
     private String role;
+    private Long telegramChatId;
 
     public UserDTO() {}
 
-    public UserDTO(int id, String username, String email, String phoneNumber, String role) {
+    public UserDTO(int id, String username, String email, String phoneNumber, String role, Long telegramChatId) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.role = role;
+        this.telegramChatId = telegramChatId;
     }
 
     public int getId() { return id; }
@@ -32,8 +34,11 @@ public class UserDTO {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
+    public Long getTelegramChatId() { return telegramChatId; }
+    public void setTelegramChatId(Long telegramChatId) { this.telegramChatId = telegramChatId; }
+
     @Override
     public String toString() {
-        return String.format("User: %s (%s) - %s", username, role, email);
+        return String.format("User: %s (%s) - %s [Telegram ID: %s]", username, role, email, telegramChatId != null ? telegramChatId : "N/A");
     }
 }

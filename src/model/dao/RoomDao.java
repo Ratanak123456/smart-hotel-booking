@@ -96,6 +96,20 @@ public class RoomDao {
         return null;
     }
 
+    public Room getRoomByNumber(String roomNumber) throws SQLException {
+        String sql = "SELECT r.id, r.room_number, r.room_type_id, r.price_per_night, r.status, r.description, rt.name as room_type_name " +
+                "FROM rooms r JOIN room_types rt ON r.room_type_id = rt.id WHERE r.room_number = ?";
+        try (Connection conn = DbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, roomNumber);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToRoom(rs);
+            }
+        }
+        return null;
+    }
+
     public long getTotalRoomsCount() throws SQLException {
         String sql = "SELECT COUNT(*) as count FROM rooms";
         try (Connection conn = DbConfig.getConnection();
@@ -127,6 +141,53 @@ public class RoomDao {
         try (Connection conn = DbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, status);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getLong("count");
+            }
+        }
+        return 0;
+    }
+
+    public List<Room> getAvailableRoomsByDate(java.time.LocalDate checkIn, java.time.LocalDate checkOut, int limit, int offset) throws SQLException {
+        List<Room> rooms = new ArrayList<>();
+        String sql = "SELECT r.id, r.room_number, r.room_type_id, r.price_per_night, r.status, r.description, rt.name as room_type_name " +
+                "FROM rooms r " +
+                "JOIN room_types rt ON r.room_type_id = rt.id " +
+                "WHERE r.status != 'MAINTENANCE' " +
+                "AND r.id NOT IN (" +
+                "  SELECT b.room_id FROM bookings b " +
+                "  WHERE b.status IN ('PENDING', 'ACTIVE') " +
+                "  AND (b.check_in_date < ? AND b.check_out_date > ?)" +
+                ") " +
+                "ORDER BY r.id LIMIT ? OFFSET ?";
+        try (Connection conn = DbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, java.sql.Date.valueOf(checkOut));
+            stmt.setDate(2, java.sql.Date.valueOf(checkIn));
+            stmt.setInt(3, limit);
+            stmt.setInt(4, offset);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                rooms.add(mapResultSetToRoom(rs));
+            }
+        }
+        return rooms;
+    }
+
+    public long getAvailableRoomCountByDate(java.time.LocalDate checkIn, java.time.LocalDate checkOut) throws SQLException {
+        String sql = "SELECT COUNT(*) as count " +
+                "FROM rooms r " +
+                "WHERE r.status != 'MAINTENANCE' " +
+                "AND r.id NOT IN (" +
+                "  SELECT b.room_id FROM bookings b " +
+                "  WHERE b.status IN ('PENDING', 'ACTIVE') " +
+                "  AND (b.check_in_date < ? AND b.check_out_date > ?)" +
+                ")";
+        try (Connection conn = DbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, java.sql.Date.valueOf(checkOut));
+            stmt.setDate(2, java.sql.Date.valueOf(checkIn));
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return rs.getLong("count");
