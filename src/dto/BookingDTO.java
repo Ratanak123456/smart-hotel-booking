@@ -17,6 +17,7 @@ public class BookingDTO {
     private String roomNumber;
     private String roomTypeName;
     private String username;
+    private Long telegramChatId;
 
     public BookingDTO() {}
 
@@ -49,4 +50,7 @@ public class BookingDTO {
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
+
+    public Long getTelegramChatId() { return telegramChatId; }
+    public void setTelegramChatId(Long telegramChatId) { this.telegramChatId = telegramChatId; }
 }

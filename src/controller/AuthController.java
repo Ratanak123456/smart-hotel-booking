@@ -46,34 +46,37 @@ public class AuthController {
     }
 
     private void handleRegister() {
-        UiUtils.printHeader("USER REGISTRATION");
+        while (true) {
+            UiUtils.printHeader("USER REGISTRATION");
+            System.out.println("(Leave any field empty to cancel)");
 
-        System.out.print("Username: ");
-        String username = scanner.nextLine().trim();
+            System.out.print("Username: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) return;
 
-        System.out.print("Email: ");
-        String email = scanner.nextLine().trim();
+            System.out.print("Email: ");
+            String email = scanner.nextLine().trim();
+            if (email.isEmpty()) return;
 
-        System.out.print("Phone Number: ");
-        String phoneNumber = scanner.nextLine().trim();
+            System.out.print("Phone Number: ");
+            String phoneNumber = scanner.nextLine().trim();
 
-        System.out.print("Password: ");
-        String password = scanner.nextLine().trim();
+            System.out.print("Password: ");
+            String password = scanner.nextLine().trim();
+            if (password.isEmpty()) return;
 
-        if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
-            UiUtils.printError("Username, Email, and Password are required.");
-            return;
-        }
-
-        try {
-            boolean success = userService.register(username, email, phoneNumber, password);
-            if (success) {
-                UiUtils.printSuccess("Registration successful! You can now login.");
-            } else {
-                UiUtils.printError("Registration failed. Please try again.");
+            try {
+                boolean success = userService.register(username, email, phoneNumber, password);
+                if (success) {
+                    UiUtils.printSuccess("Registration successful! You can now login.");
+                    return;
+                } else {
+                    UiUtils.printError("Registration failed. Please try again.");
+                }
+            } catch (Exception e) {
+                UiUtils.printError("Registration error: " + e.getMessage());
+                System.out.println("Please try again with valid information.");
             }
-        } catch (Exception e) {
-            UiUtils.printError("Registration error: " + e.getMessage());
         }
     }
 

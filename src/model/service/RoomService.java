@@ -9,6 +9,10 @@ public class RoomService {
     private RoomDao roomDao = new RoomDao();
     private static final int PAGE_SIZE = 5;
 
+    public List<Room> getAllRooms(int limit, int offset) throws SQLException {
+        return roomDao.getAllRoomsPaginated(limit, offset);
+    }
+
     public List<Room> getAllRoomsPaginated(int pageNumber) throws SQLException {
         int offset = (pageNumber - 1) * PAGE_SIZE;
         return roomDao.getAllRoomsPaginated(PAGE_SIZE, offset);
@@ -47,6 +51,10 @@ public class RoomService {
 
     public long getRoomCountByStatus(String status) throws SQLException {
         return roomDao.getRoomCountByStatus(status);
+    }
+
+    public long getRoomCountByTypeAndStatus(String roomTypeName, String status) throws SQLException {
+        return roomDao.getRoomCountByTypeAndStatus(roomTypeName, status);
     }
 
     public List<Room> getAvailableRoomsByDate(java.time.LocalDate checkIn, java.time.LocalDate checkOut, int pageNumber) throws SQLException {

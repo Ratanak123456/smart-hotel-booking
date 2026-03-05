@@ -17,6 +17,7 @@ public class BookingMapper {
         dto.setRoomNumber(booking.getRoomNumber());
         dto.setRoomTypeName(booking.getRoomTypeName());
         dto.setUsername(booking.getUsername());
+        dto.setTelegramChatId(booking.getTelegramChatId());
         return dto;
     }
 
@@ -33,6 +34,7 @@ public class BookingMapper {
         booking.setRoomNumber(dto.getRoomNumber());
         booking.setRoomTypeName(dto.getRoomTypeName());
         booking.setUsername(dto.getUsername());
+        booking.setTelegramChatId(dto.getTelegramChatId());
         return booking;
     }
 }

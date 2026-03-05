@@ -2,6 +2,8 @@ package model.service;
 
 import model.dao.UserDao;
 import model.entities.User;
+import org.mindrot.jbcrypt.BCrypt;
+import exception.ValidationException;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -12,24 +14,24 @@ public class UserService {
 
     public User login(String username, String password) throws Exception {
         User user = userDAO.findByUsername(username);
-        if (user != null && user.getPasswordHash().equals(password)) {
+        if (user != null && BCrypt.checkpw(password, user.getPasswordHash())) {
             return user;
         }
         return null;
     }
 
     public boolean register(String username, String email, String phoneNumber, String password) throws Exception {
+        return register(username, email, phoneNumber, password, null);
+    }
+
+    public boolean register(String username, String email, String phoneNumber, String password, Long telegramChatId) throws Exception {
         // Validation: Email must end with @gmail.com
         if (!email.toLowerCase().endsWith("@gmail.com")) {
-            throw new Exception("Invalid email. Email must end with @gmail.com.");
+            throw new ValidationException("Invalid email. Email must end with @gmail.com.");
         }
 
         // Validation: Strong password
-        // At least 8 characters, one uppercase, one lowercase, one number, and one special character.
-        if (!isValidPassword(password)) {
-            throw new Exception("Password is too weak. It must be at least 8 characters long, " +
-                    "contain at least one uppercase letter, one lowercase letter, one number, and one special character.");
-        }
+        validatePassword(password);
 
         // Check if username or email already exists
         if (userDAO.findByUsername(username) != null) {
@@ -43,14 +45,21 @@ public class UserService {
         newUser.setUsername(username);
         newUser.setEmail(email);
         newUser.setPhoneNumber(phoneNumber);
-        newUser.setPasswordHash(password); // In a real app, hash this!
+        
+        // Hash the password before saving
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+        newUser.setPasswordHash(hashedPassword);
+        
         newUser.setRole("USER"); // Default to USER as requested
+        newUser.setTelegramChatId(telegramChatId);
 
         return userDAO.save(newUser);
     }
 
-    private boolean isValidPassword(String password) {
-        if (password.length() < 8) return false;
+    private void validatePassword(String password) throws ValidationException {
+        if (password.length() < 8) {
+            throw new ValidationException("Password is too short. It must be at least 8 characters long.");
+        }
 
         boolean hasUpper = false;
         boolean hasLower = false;
@@ -66,7 +75,18 @@ public class UserService {
             else if (specialChars.contains(String.valueOf(c))) hasSpecial = true;
         }
 
-        return hasUpper && hasLower && hasDigit && hasSpecial;
+        if (!hasUpper) {
+            throw new ValidationException("Password must contain at least one uppercase letter.");
+        }
+        if (!hasLower) {
+            throw new ValidationException("Password must contain at least one lowercase letter.");
+        }
+        if (!hasDigit) {
+            throw new ValidationException("Password must contain at least one digit.");
+        }
+        if (!hasSpecial) {
+            throw new ValidationException("Password must contain at least one special character.");
+        }
     }
 
     public List<User> getAllUsersPaginated(int page) throws SQLException {
@@ -89,5 +109,9 @@ public class UserService {
 
     public boolean deleteUser(int userId) throws SQLException {
         return userDAO.softDelete(userId);
+    }
+
+    public boolean updateTelegramChatId(int userId, long chatId) throws SQLException {
+        return userDAO.updateTelegramChatId(userId, chatId);
     }
 }

@@ -6,6 +6,8 @@ import model.entities.Booking;
 import model.entities.Invoice;
 import model.service.RoomService;
 import model.service.BookingService;
+import model.service.UserService;
+import model.service.TelegramService;
 import org.nocrala.tools.texttablefmt.Table;
 
 import java.sql.SQLException;
@@ -19,12 +21,14 @@ public class UserPanel {
     private User loggedInUser;
     private RoomService roomService;
     private BookingService bookingService;
+    private UserService userService;
     private Scanner scanner;
 
     public UserPanel(User user) {
         this.loggedInUser = user;
         this.roomService = new RoomService();
         this.bookingService = new BookingService();
+        this.userService = new UserService();
         this.scanner = new Scanner(System.in);
     }
 
@@ -38,9 +42,10 @@ public class UserPanel {
                     "2. Make a Booking",
                     "3. My Bookings",
                     "4. My Invoices",
-                    "5. Logout");
+                    "5. Telegram Settings",
+                    "6. Logout");
 
-            System.out.print("Select an option (1-5): ");
+            System.out.print("Select an option (1-6): ");
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
@@ -57,6 +62,9 @@ public class UserPanel {
                     viewMyInvoices();
                     break;
                 case "5":
+                    telegramSettings();
+                    break;
+                case "6":
                     UiUtils.printMessage("Logging out...");
                     return;
                 default:
@@ -196,6 +204,7 @@ public class UserPanel {
             booking.setUsername(loggedInUser.getUsername());
             booking.setUserEmail(loggedInUser.getEmail());
             booking.setUserPhone(loggedInUser.getPhoneNumber());
+            booking.setTelegramChatId(loggedInUser.getTelegramChatId());
 
             Booking createdBooking = bookingService.createBooking(booking);
 
@@ -412,7 +421,7 @@ public class UserPanel {
                     "4. Filter by type AND status",
                     "5. View detailed room features",
                     "6. SEARCH AVAILABLE BY DATE",
-                    "7. Back to login");
+                    "7. Back to Menu");
 
             System.out.print("Select an option (1-7): ");
             String choice = scanner.nextLine().trim();
@@ -704,10 +713,12 @@ public class UserPanel {
     private void displayRoomsPaginatedWithBoth(String roomType, String status) throws SQLException {
         int pageNumber = 1;
         int rowsPerPage = 5;
-        long totalCount = roomService.getRoomCountByType(roomType);
-        int totalPages = (int) Math.ceil((double) totalCount / rowsPerPage);
-
+        
         while (true) {
+            long totalCount = roomService.getRoomCountByTypeAndStatus(roomType, status);
+            int totalPages = (int) Math.ceil((double) totalCount / rowsPerPage);
+            if (totalPages == 0) totalPages = 1;
+
             List<Room> rooms = roomService.getRoomsByTypeAndStatus(roomType, status, pageNumber);
 
             UiUtils.printHeader("FILTERED ROOMS - " + roomType + " - " + status + " (Page " + pageNumber + "/" + totalPages + ")");
@@ -812,5 +823,44 @@ public class UserPanel {
 
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
+    }
+
+    private void telegramSettings() {
+        UiUtils.printHeader("TELEGRAM SETTINGS");
+
+        Long currentChatId = loggedInUser.getTelegramChatId();
+        if (currentChatId != null) {
+            System.out.println("Currently connected Telegram Chat ID: " + currentChatId);
+        } else {
+            System.out.println("Telegram is not connected.");
+        }
+
+        System.out.println("\nTo connect your Telegram:");
+        System.out.println("1. Find your Chat ID (you can use @userinfobot on Telegram)");
+        System.out.println("2. Enter your Chat ID below to receive booking notifications.");
+
+        System.out.print("\nEnter your Telegram Chat ID (or press Enter to cancel): ");
+        String input = scanner.nextLine().trim();
+
+        if (input.isEmpty()) return;
+
+        try {
+            long chatId = Long.parseLong(input);
+            boolean success = userService.updateTelegramChatId(loggedInUser.getId(), chatId);
+            if (success) {
+                loggedInUser.setTelegramChatId(chatId);
+                UiUtils.printSuccess("Telegram Chat ID updated successfully!");
+                
+                // Send a test message
+                TelegramService telegramService = new TelegramService();
+                telegramService.sendMessage(chatId, "<b>Success!</b> Your account is now linked to our Hotel Reservation System. You will receive notifications here.");
+            } else {
+                UiUtils.printError("Failed to update Telegram Chat ID.");
+            }
+        } catch (NumberFormatException e) {
+            UiUtils.printError("Invalid Chat ID. Please enter a numeric value.");
+        } catch (SQLException e) {
+            UiUtils.printError("Database error: " + e.getMessage());
+        }
     }
 }

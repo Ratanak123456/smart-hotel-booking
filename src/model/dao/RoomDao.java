@@ -149,6 +149,21 @@ public class RoomDao {
         return 0;
     }
 
+    public long getRoomCountByTypeAndStatus(String roomTypeName, String status) throws SQLException {
+        String sql = "SELECT COUNT(*) as count FROM rooms r JOIN room_types rt ON r.room_type_id = rt.id " +
+                "WHERE rt.name = ? AND r.status = CAST(? AS room_status_enum)";
+        try (Connection conn = DbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, roomTypeName);
+            stmt.setString(2, status);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getLong("count");
+            }
+        }
+        return 0;
+    }
+
     public List<Room> getAvailableRoomsByDate(java.time.LocalDate checkIn, java.time.LocalDate checkOut, int limit, int offset) throws SQLException {
         List<Room> rooms = new ArrayList<>();
         String sql = "SELECT r.id, r.room_number, r.room_type_id, r.price_per_night, r.status, r.description, rt.name as room_type_name " +

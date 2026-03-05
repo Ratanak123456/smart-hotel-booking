@@ -18,6 +18,7 @@ public class BookingService {
     private BookingDao bookingDao = new BookingDao();
     private InvoiceDao invoiceDao = new InvoiceDao();
     private RoomDao roomDao = new RoomDao();
+    private TelegramService telegramService = new TelegramService();
     private static final int PAGE_SIZE = 5;
 
     // Create a new booking (NO invoice yet - invoice created upon approval)
@@ -52,6 +53,11 @@ public class BookingService {
         booking.setId(bookingId);
         booking.setRoomNumber(room.getRoomNumber());
         booking.setRoomTypeName(room.getRoomTypeName());
+
+        // Notify user about pending booking
+        if (booking.getTelegramChatId() != null) {
+            telegramService.notifyBookingStatus(booking.getTelegramChatId(), String.valueOf(booking.getId()), "PENDING", room.getRoomNumber());
+        }
 
         return booking;
     }
@@ -157,6 +163,11 @@ public class BookingService {
             bookingDao.updateRoomStatus(booking.getRoomId(), "OCCUPIED");
             // Generate invoice on approval
             generateInvoiceOnApproval(booking);
+
+            // Notify user
+            if (booking.getTelegramChatId() != null) {
+                telegramService.notifyBookingStatus(booking.getTelegramChatId(), String.valueOf(booking.getId()), "ACTIVE", booking.getRoomNumber());
+            }
         }
         return updated;
     }
@@ -168,7 +179,14 @@ public class BookingService {
         }
 
         // Update booking status to CANCELLED
-        return bookingDao.updateStatus(bookingId, "CANCELLED");
+        boolean updated = bookingDao.updateStatus(bookingId, "CANCELLED");
+        if (updated) {
+            // Notify user
+            if (booking.getTelegramChatId() != null) {
+                telegramService.notifyBookingStatus(booking.getTelegramChatId(), String.valueOf(booking.getId()), "CANCELLED", booking.getRoomNumber());
+            }
+        }
+        return updated;
     }
 
     public int getTotalPages(long totalCount) {
