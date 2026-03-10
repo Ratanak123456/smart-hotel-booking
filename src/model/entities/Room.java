@@ -7,12 +7,12 @@ public class Room {
     private String roomNumber;
     private int roomTypeId;
     private BigDecimal pricePerNight;
-    private RoomStatus status; // AVAILABLE, OCCUPIED, MAINTENANCE
+    private RoomStatus status; // AVAILABLE, MAINTENANCE
     private String description;
     private String roomTypeName;
 
     public enum RoomStatus {
-        AVAILABLE, OCCUPIED, MAINTENANCE
+        AVAILABLE, MAINTENANCE
     }
 
     public Room() {

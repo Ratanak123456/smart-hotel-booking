@@ -111,13 +111,20 @@ public class TelegramBot implements Runnable {
         // 1. Global Commands
         if (text.equals("/start")) {
             session.reset();
-            reply(chatId, "Welcome to Smart Hotel Bot! 🏨\n\nCommands:\n/login - Log in to your account\n/register - Create a new account\n/cancel - Cancel current action");
+            reply(chatId, "<b>🏨 Welcome to Smart Hotel!</b>\n\n" +
+                          "Your personal assistant for booking luxury stays.\n\n" +
+                          "<b>Commands:</b>\n" +
+                          "🔑 /login - Access your account\n" +
+                          "📝 /register - Create an account\n" +
+                          "🏠 /rooms - Browse our rooms\n" +
+                          "📅 /book - Start a reservation\n" +
+                          "❌ /cancel - Stop current action");
             return;
         }
         
         if (text.equals("/cancel")) {
             session.reset();
-            reply(chatId, "Action cancelled.");
+            reply(chatId, "⏹ <b>Action cancelled.</b> Returning to home.");
             return;
         }
 
@@ -147,21 +154,21 @@ public class TelegramBot implements Runnable {
     private void handleNoneState(long chatId, UserSession session, String text) {
         if (text.equals("/login")) {
             session.state = State.LOGIN_USERNAME;
-            reply(chatId, "Please enter your Username:");
+            reply(chatId, "👤 <b>LOGIN</b>\nPlease enter your <b>Username</b>:");
         } else if (text.equals("/register")) {
             session.state = State.REGISTER_USERNAME;
-            reply(chatId, "Let's create an account.\nPlease enter a Username:");
+            reply(chatId, "📝 <b>REGISTRATION</b>\nLet's get started. What's your <b>Username</b>?");
         } else if (text.equals("/book")) {
             if (session.currentUser == null) {
-                reply(chatId, "You must /login first.");
+                reply(chatId, "⚠️ <b>Wait!</b> You need to /login first to make a booking.");
             } else {
                 session.state = State.BOOKING_DATE_START;
-                reply(chatId, "📅 Format: YYYY-MM-DD\nPlease enter Check-in Date:");
+                reply(chatId, "📅 <b>NEW BOOKING</b>\nWhen would you like to arrive?\n\n<i>Format: YYYY-MM-DD (e.g., 2026-03-05)</i>");
             }
         } else if (text.equals("/rooms")) {
             showRooms(chatId);
         } else {
-            reply(chatId, "I didn't understand that. Try /start, /login, or /register.");
+            reply(chatId, "🤔 <b>I didn't quite get that.</b>\nTry /start to see what I can do!");
         }
     }
 
@@ -169,7 +176,7 @@ public class TelegramBot implements Runnable {
         if (session.state == State.LOGIN_USERNAME) {
             session.tempData.put("username", text);
             session.state = State.LOGIN_PASSWORD;
-            reply(chatId, "Enter Password:");
+            reply(chatId, "🔐 <b>Password:</b>\nEnter your password for " + text + ":");
         } else if (session.state == State.LOGIN_PASSWORD) {
             try {
                 User user = userService.login(session.tempData.get("username"), text);
@@ -181,13 +188,13 @@ public class TelegramBot implements Runnable {
                         user.setTelegramChatId(chatId);
                     }
                     session.state = State.NONE;
-                    reply(chatId, "✅ Login Successful! Welcome " + user.getUsername() + ".\n\nYou can now use /book to make a reservation or /rooms to see rooms.");
+                    reply(chatId, "✅ <b>Login Successful!</b>\nWelcome back, <b>" + user.getUsername() + "</b>!\n\nReady to /book a room?");
                 } else {
                     session.state = State.NONE;
-                    reply(chatId, "❌ Invalid credentials. Try /login again.");
+                    reply(chatId, "❌ <b>Login Failed.</b>\nInvalid credentials. Try /login again.");
                 }
             } catch (Exception e) {
-                reply(chatId, "Error: " + e.getMessage());
+                reply(chatId, "⚠️ <b>Error:</b> " + e.getMessage());
                 session.state = State.NONE;
             }
         }
@@ -198,17 +205,17 @@ public class TelegramBot implements Runnable {
             case REGISTER_USERNAME:
                 session.tempData.put("username", text);
                 session.state = State.REGISTER_EMAIL;
-                reply(chatId, "Enter Email (must be @gmail.com):");
+                reply(chatId, "📧 <b>Email Address:</b>\n(Note: Must end with @gmail.com)");
                 break;
             case REGISTER_EMAIL:
                 session.tempData.put("email", text);
                 session.state = State.REGISTER_PHONE;
-                reply(chatId, "Enter Phone Number:");
+                reply(chatId, "📞 <b>Phone Number:</b>\nEnter your contact number:");
                 break;
             case REGISTER_PHONE:
                 session.tempData.put("phone", text);
                 session.state = State.REGISTER_PASSWORD;
-                reply(chatId, "Enter Password (min 8 chars, 1 Upper, 1 Lower, 1 Digit, 1 Special):");
+                reply(chatId, "🔒 <b>Create Password:</b>\nMust have 8+ chars, 1 Upper, 1 Lower, 1 Digit, 1 Special.");
                 break;
             case REGISTER_PASSWORD:
                 try {
@@ -221,13 +228,13 @@ public class TelegramBot implements Runnable {
                     );
                     if (success) {
                         session.state = State.NONE;
-                        reply(chatId, "✅ Registration successful! Please /login.");
+                        reply(chatId, "✨ <b>Account Created!</b>\nYou're all set. Now please /login.");
                     } else {
-                        reply(chatId, "Registration failed. Try /register again.");
+                        reply(chatId, "❌ <b>Registration failed.</b>\nPlease try /register again.");
                         session.state = State.NONE;
                     }
                 } catch (Exception e) {
-                    reply(chatId, "Error: " + e.getMessage() + "\nTry /register again.");
+                    reply(chatId, "⚠️ <b>Error:</b> " + e.getMessage() + "\nTry /register again.");
                     session.state = State.NONE;
                 }
                 break;
@@ -238,31 +245,32 @@ public class TelegramBot implements Runnable {
         try {
             if (session.state == State.BOOKING_DATE_START) {
                 LocalDate date = LocalDate.parse(text);
-                if (date.isBefore(LocalDate.now())) throw new IllegalArgumentException("Date cannot be in past");
+                if (date.isBefore(LocalDate.now())) throw new IllegalArgumentException("Date cannot be in the past!");
                 session.tempData.put("checkin", text);
                 session.state = State.BOOKING_DATE_END;
-                reply(chatId, "Enter Check-out Date (YYYY-MM-DD):");
+                reply(chatId, "📅 <b>Departure:</b>\nEnter Check-out Date (YYYY-MM-DD):");
                 
             } else if (session.state == State.BOOKING_DATE_END) {
                 LocalDate date = LocalDate.parse(text);
                 LocalDate checkin = LocalDate.parse(session.tempData.get("checkin"));
-                if (!date.isAfter(checkin)) throw new IllegalArgumentException("Check-out must be after check-in");
+                if (!date.isAfter(checkin)) throw new IllegalArgumentException("Check-out must be after check-in!");
                 
                 session.tempData.put("checkout", text);
                 
                 // Show available rooms
                 List<Room> rooms = roomService.getAvailableRoomsByDate(checkin, date, 1);
                 if (rooms.isEmpty()) {
-                    reply(chatId, "No rooms available for these dates. Try different dates with /book.");
+                    reply(chatId, "😔 <b>Sorry!</b> No rooms available for those dates.\nTry different dates with /book.");
                     session.state = State.NONE;
                     return;
                 }
                 
-                StringBuilder msg = new StringBuilder("🏠 Available Rooms:\n\n");
+                StringBuilder msg = new StringBuilder("🛌 <b>SELECT YOUR ROOM</b>\n\n");
                 for (Room r : rooms) {
-                    msg.append(String.format("ID: %s | %s | Type: %s | $%s\n", r.getRoomNumber(), r.getRoomNumber(), r.getRoomTypeName(), r.getPricePerNight()));
+                    msg.append(String.format("<b>#%s</b> - %s\n💰 <b>$%s</b> /night\n\n", 
+                               r.getRoomNumber(), r.getRoomTypeName(), r.getPricePerNight()));
                 }
-                msg.append("\nType the Room Number ID to confirm booking:");
+                msg.append("👉 <b>Reply with the Room Number</b> to confirm:");
                 reply(chatId, msg.toString());
                 session.state = State.BOOKING_SELECT_ROOM;
                 
@@ -270,7 +278,7 @@ public class TelegramBot implements Runnable {
                 String roomNum = text;
                 Room room = roomService.getRoomByNumber(roomNum);
                 if (room == null) {
-                    reply(chatId, "Invalid Room Number. Try again or /cancel.");
+                    reply(chatId, "❌ <b>Invalid Room Number.</b>\nPlease choose from the list above or /cancel.");
                     return;
                 }
                 
@@ -286,14 +294,16 @@ public class TelegramBot implements Runnable {
                 
                 bookingService.createBooking(booking);
                 
-                reply(chatId, "🎉 Booking Request Sent! Reference #" + booking.getId() + "\nStatus: PENDING\nWe will notify you when approved.");
+                reply(chatId, "🎉 <b>BOOKING REQUEST SENT!</b>\n\n" +
+                              "<b>Reference:</b> #" + booking.getId() + "\n" +
+                              "<b>Status:</b> PENDING ⏳\n\n" +
+                              "We will notify you once the admin approves your stay!");
                 session.state = State.NONE;
             }
         } catch (DateTimeParseException e) {
-            reply(chatId, "Invalid Date format. Use YYYY-MM-DD.");
+            reply(chatId, "❌ <b>Invalid Format.</b>\nPlease use YYYY-MM-DD.");
         } catch (Exception e) {
-            reply(chatId, "Error: " + e.getMessage());
-            e.printStackTrace();
+            reply(chatId, "⚠️ <b>Error:</b> " + e.getMessage());
             session.state = State.NONE;
         }
     }
@@ -301,14 +311,16 @@ public class TelegramBot implements Runnable {
     private void showRooms(long chatId) {
         try {
             List<Room> rooms = roomService.getAllRooms(100, 0);
-            StringBuilder msg = new StringBuilder("🏨 Hotel Rooms:\n");
+            StringBuilder msg = new StringBuilder("🏨 <b>OUR ROOMS</b>\n\n");
             for (Room r : rooms) {
-                msg.append(r.getRoomNumber()).append(" - ").append(r.getRoomTypeName())
-                   .append(" ($").append(r.getPricePerNight()).append(")\n");
+                String statusEmoji = r.getStatus() == Room.RoomStatus.AVAILABLE ? "✅" : "❌";
+                msg.append(String.format("%s <b>Room %s</b> - %s\nPrice: <b>$%s</b>\n\n", 
+                           statusEmoji, r.getRoomNumber(), r.getRoomTypeName(), r.getPricePerNight()));
             }
+            msg.append("Ready to stay? /book now!");
             reply(chatId, msg.toString());
         } catch (SQLException e) {
-            reply(chatId, "Error fetching rooms.");
+            reply(chatId, "⚠️ <b>Error:</b> Could not fetch room list.");
         }
     }
 

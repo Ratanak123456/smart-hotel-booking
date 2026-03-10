@@ -55,13 +55,43 @@ public class TelegramService {
      */
     public void notifyBookingStatus(long chatId, String bookingRef, String status, String roomNumber) {
         String emoji = status.equalsIgnoreCase("ACTIVE") ? "✅" : (status.equalsIgnoreCase("CANCELLED") ? "❌" : "⏳");
+        String statusText = status.equalsIgnoreCase("ACTIVE") ? "APPROVED" : status;
+        
         String message = String.format(
             "<b>Booking Update %s</b>\n\n" +
             "Reference: #%s\n" +
             "Room: %s\n" +
             "Status: <b>%s</b>\n\n" +
             "Thank you for choosing our hotel!",
-            emoji, bookingRef, roomNumber, status
+            emoji, bookingRef, roomNumber, statusText
+        );
+        sendMessage(chatId, message);
+    }
+
+    /**
+     * Sends an invoice details notification.
+     */
+    public void notifyInvoice(long chatId, model.entities.Invoice invoice) {
+        String message = String.format(
+            "<b>🧾 INVOICE GENERATED</b>\n\n" +
+            "Invoice No: <code>%s</code>\n" +
+            "Guest: %s\n" +
+            "Room: %s (%s)\n" +
+            "Check-in: %s\n" +
+            "Check-out: %s\n" +
+            "Nights: %d\n\n" +
+            "<b>Total Amount: $%s</b>\n" +
+            "Status: <b>%s</b>\n\n" +
+            "Enjoy your stay! 🏨",
+            invoice.getInvoiceNumber(),
+            invoice.getGuestName(),
+            invoice.getRoomNumber(),
+            invoice.getRoomTypeName(),
+            invoice.getCheckInDate(),
+            invoice.getCheckOutDate(),
+            invoice.getNights(),
+            invoice.getTotalAmount(),
+            invoice.getInvoiceStatus()
         );
         sendMessage(chatId, message);
     }

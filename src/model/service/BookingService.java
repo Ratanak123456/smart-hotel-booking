@@ -159,14 +159,13 @@ public class BookingService {
         // Update booking status to ACTIVE
         boolean updated = bookingDao.updateStatus(bookingId, "ACTIVE");
         if (updated) {
-            // Update room status to OCCUPIED
-            bookingDao.updateRoomStatus(booking.getRoomId(), "OCCUPIED");
             // Generate invoice on approval
-            generateInvoiceOnApproval(booking);
+            Invoice invoice = generateInvoiceOnApproval(booking);
 
             // Notify user
             if (booking.getTelegramChatId() != null) {
                 telegramService.notifyBookingStatus(booking.getTelegramChatId(), String.valueOf(booking.getId()), "ACTIVE", booking.getRoomNumber());
+                telegramService.notifyInvoice(booking.getTelegramChatId(), invoice);
             }
         }
         return updated;

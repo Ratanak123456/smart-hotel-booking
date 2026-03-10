@@ -106,19 +106,21 @@ public class AdminPanel {
     private void filterByRoomType() throws SQLException {
         UiUtils.printHeader("Available Room Types");
         UiUtils.printMenu(null,
-                "1. Regular",
-                "2. Family",
-                "3. Suite",
-                "4. Deluxe");
+                "1. SINGLE",
+                "2. DOUBLE",
+                "3. SUITE",
+                "4. DELUXE",
+                "5. PENTHOUSE");
 
-        System.out.print("Select room type (1-4): ");
+        System.out.print("Select room type (1-5): ");
         String choice = scanner.nextLine().trim();
         String roomType = null;
         switch (choice) {
-            case "1": roomType = "Regular"; break;
-            case "2": roomType = "Family"; break;
-            case "3": roomType = "Suite"; break;
-            case "4": roomType = "Deluxe"; break;
+            case "1": roomType = "SINGLE"; break;
+            case "2": roomType = "DOUBLE"; break;
+            case "3": roomType = "SUITE"; break;
+            case "4": roomType = "DELUXE"; break;
+            case "5": roomType = "PENTHOUSE"; break;
             default:
                 UiUtils.printError("Invalid option.");
                 return;
@@ -130,16 +132,14 @@ public class AdminPanel {
         UiUtils.printHeader("Room Status Options");
         UiUtils.printMenu(null,
                 "1. Available",
-                "2. Occupied",
-                "3. Maintenance");
+                "2. Maintenance");
 
-        System.out.print("Select status (1-3): ");
+        System.out.print("Select status (1-2): ");
         String choice = scanner.nextLine().trim();
         String status = null;
         switch (choice) {
             case "1": status = "AVAILABLE"; break;
-            case "2": status = "OCCUPIED"; break;
-            case "3": status = "MAINTENANCE"; break;
+            case "2": status = "MAINTENANCE"; break;
             default:
                 UiUtils.printError("Invalid option.");
                 return;
@@ -148,44 +148,136 @@ public class AdminPanel {
     }
 
     private void filterByTypeAndStatus() throws SQLException {
-        UiUtils.printHeader("Select Room Type");
-        UiUtils.printMenu(null,
-                "1. Regular",
-                "2. Family",
-                "3. Suite",
-                "4. Deluxe");
+        UiUtils.printHeader("Filter by Type AND Status");
 
-        System.out.print("Select room type (1-4): ");
+        // Select room type
+        UiUtils.printMenu("Select Room Type",
+                "1. SINGLE",
+                "2. DOUBLE",
+                "3. SUITE",
+                "4. DELUXE",
+                "5. PENTHOUSE");
+
+        System.out.print("Select room type (1-5): ");
         String typeChoice = scanner.nextLine().trim();
         String roomType = null;
         switch (typeChoice) {
-            case "1": roomType = "Regular"; break;
-            case "2": roomType = "Family"; break;
-            case "3": roomType = "Suite"; break;
-            case "4": roomType = "Deluxe"; break;
+            case "1": roomType = "SINGLE"; break;
+            case "2": roomType = "DOUBLE"; break;
+            case "3": roomType = "SUITE"; break;
+            case "4": roomType = "DELUXE"; break;
+            case "5": roomType = "PENTHOUSE"; break;
             default:
                 UiUtils.printError("Invalid option.");
                 return;
         }
 
-        UiUtils.printHeader("Select Room Status");
-        UiUtils.printMenu(null,
+        // Select status
+        UiUtils.printMenu("Select Room Status",
                 "1. Available",
-                "2. Occupied",
-                "3. Maintenance");
+                "2. Maintenance");
 
-        System.out.print("Select status (1-3): ");
+        System.out.print("Select status (1-2): ");
         String statusChoice = scanner.nextLine().trim();
         String status = null;
         switch (statusChoice) {
             case "1": status = "AVAILABLE"; break;
-            case "2": status = "OCCUPIED"; break;
-            case "3": status = "MAINTENANCE"; break;
+            case "2": status = "MAINTENANCE"; break;
             default:
                 UiUtils.printError("Invalid option.");
                 return;
         }
-        displayRoomsPaginatedWithBoth(roomType, status);
+        displayRoomsFiltered(roomType, status);
+    }
+
+    private void displayRoomsFiltered(String roomType, String status) throws SQLException {
+        int pageNumber = 1;
+        int rowsPerPage = 5;
+
+        while (true) {
+            long totalCount = roomService.getRoomCountByTypeAndStatus(roomType, status);
+            int totalPages = (int) Math.ceil((double) totalCount / rowsPerPage);
+            if (totalPages == 0) totalPages = 1;
+
+            List<Room> rooms = roomService.getRoomsByTypeAndStatus(roomType, status, pageNumber);
+
+            UiUtils.printHeader("FILTERED ROOMS - " + roomType + " - " + status + " (Page " + pageNumber + "/" + totalPages + ")");
+
+            if (rooms.isEmpty()) {
+                UiUtils.printMessage("No rooms found matching your criteria.");
+            } else {
+                Table table = UiUtils.createDataTable(4);
+                table.addCell("Room No");
+                table.addCell("Type");
+                table.addCell("Price/Night");
+                table.addCell("Status");
+
+                for (Room room : rooms) {
+                    table.addCell(room.getRoomNumber());
+                    table.addCell(room.getRoomTypeName());
+                    table.addCell("$" + room.getPricePerNight());
+                    table.addCell(String.valueOf(room.getStatus()));
+                }
+                System.out.println(table.render());
+            }
+
+            // Navigation
+            if (pageNumber > 1 || pageNumber < totalPages) {
+                String prev = pageNumber > 1 ? "p - Previous page" : "";
+                String next = pageNumber < totalPages ? "n - Next page" : "";
+                if (!prev.isEmpty() && !next.isEmpty()) {
+                    UiUtils.printMenu(null, prev, next, "b - Back", "v - View room details");
+                } else if (!prev.isEmpty()) {
+                    UiUtils.printMenu(null, prev, "b - Back", "v - View room details");
+                } else {
+                    UiUtils.printMenu(null, next, "b - Back", "v - View room details");
+                }
+            } else {
+                UiUtils.printMenu(null, "b - Back", "v - View room details");
+            }
+
+            System.out.print("Choose: ");
+            String navChoice = scanner.nextLine().trim().toLowerCase();
+
+            switch (navChoice) {
+                case "p": if (pageNumber > 1) pageNumber--; break;
+                case "n": if (pageNumber < totalPages) pageNumber++; break;
+                case "b": return;
+                case "v":
+                    viewRoomDetailsByInput();
+                    break;
+                default:
+                    UiUtils.printError("Invalid option.");
+            }
+        }
+    }
+
+    private void viewRoomDetailsByInput() throws SQLException {
+        System.out.print("\nEnter Room Number to view details: ");
+        String roomNum = scanner.nextLine().trim();
+
+        if (roomNum.isEmpty()) return;
+
+        Room room = roomService.getRoomByNumber(roomNum);
+        if (room == null) {
+            UiUtils.printError("Room not found.");
+            return;
+        }
+
+        UiUtils.printHeader("ROOM DETAILS");
+
+        Table detailTable = UiUtils.createDataTable(2);
+        detailTable.addCell("Room Number:");
+        detailTable.addCell(room.getRoomNumber());
+        detailTable.addCell("Room Type:");
+        detailTable.addCell(room.getRoomTypeName());
+        detailTable.addCell("Price per Night:");
+        detailTable.addCell("$" + room.getPricePerNight());
+        detailTable.addCell("Status:");
+        detailTable.addCell(String.valueOf(room.getStatus()));
+        detailTable.addCell("Features:");
+        detailTable.addCell(room.getDescription() != null ? room.getDescription() : "No features listed");
+        System.out.println(detailTable.render());
     }
 
     private void displayRoomsPaginated(String roomType, String status) throws SQLException {
@@ -268,72 +360,6 @@ public class AdminPanel {
                     break;
                 case "b":
                     return;
-                default:
-                    UiUtils.printError("Invalid option.");
-            }
-        }
-    }
-
-    private void displayRoomsPaginatedWithBoth(String roomType, String status) throws SQLException {
-        int pageNumber = 1;
-        int rowsPerPage = 5;
-        long totalCount = roomService.getRoomCountByType(roomType);
-        int totalPages = (int) Math.ceil((double) totalCount / rowsPerPage);
-
-        while (true) {
-            List<Room> rooms = roomService.getRoomsByTypeAndStatus(roomType, status, pageNumber);
-
-            UiUtils.printHeader("FILTERED ROOMS - " + roomType + " - " + status + " (Page " + pageNumber + "/" + totalPages + ")");
-
-            if (rooms.isEmpty()) {
-                UiUtils.printMessage("No rooms found matching your criteria.");
-            } else {
-                Table table = UiUtils.createDataTable(5);
-                table.addCell("Room No");
-                table.addCell("Type");
-                table.addCell("Price/Night");
-                table.addCell("Status");
-                table.addCell("Features");
-
-                for (Room room : rooms) {
-                    table.addCell(room.getRoomNumber());
-                    table.addCell(room.getRoomTypeName());
-                    table.addCell("$" + room.getPricePerNight());
-                    table.addCell(String.valueOf(room.getStatus()));
-
-                    String features = room.getDescription();
-                    if (features == null || features.isEmpty()) {
-                        features = "No features listed";
-                    } else if (features.length() > 30) {
-                        features = features.substring(0, 27) + "...";
-                    }
-                    table.addCell(features);
-                }
-                System.out.println(table.render());
-            }
-
-            // Navigation
-            if (pageNumber > 1 || pageNumber < totalPages) {
-                String prev = pageNumber > 1 ? "p - Previous page" : "";
-                String next = pageNumber < totalPages ? "n - Next page" : "";
-                if (!prev.isEmpty() && !next.isEmpty()) {
-                    UiUtils.printMenu(null, prev, next, "b - Back");
-                } else if (!prev.isEmpty()) {
-                    UiUtils.printMenu(null, prev, "b - Back");
-                } else {
-                    UiUtils.printMenu(null, next, "b - Back");
-                }
-            } else {
-                UiUtils.printMenu(null, "b - Back");
-            }
-
-            System.out.print("Choose: ");
-            String navChoice = scanner.nextLine().trim().toLowerCase();
-
-            switch (navChoice) {
-                case "p": if (pageNumber > 1) pageNumber--; break;
-                case "n": if (pageNumber < totalPages) pageNumber++; break;
-                case "b": return;
                 default:
                     UiUtils.printError("Invalid option.");
             }
@@ -434,50 +460,7 @@ public class AdminPanel {
     }
 
     private void viewDetailedRoomFeatures() throws SQLException {
-        UiUtils.printHeader("ROOM DETAILS WITH COMPLETE FEATURES");
-
-        List<Room> rooms = roomService.getAllRoomsPaginated(1);
-        Table listTable = UiUtils.createDataTable(4);
-        listTable.addCell("Room No");
-        listTable.addCell("Type");
-        listTable.addCell("Price/Night");
-        listTable.addCell("Status");
-
-        for (Room room : rooms) {
-            listTable.addCell(room.getRoomNumber());
-            listTable.addCell(room.getRoomTypeName());
-            listTable.addCell("$" + room.getPricePerNight());
-            listTable.addCell(String.valueOf(room.getStatus()));
-        }
-        System.out.println(listTable.render());
-
-        System.out.print("\nEnter Room Number to view complete features: ");
-        String roomNum = scanner.nextLine().trim();
-
-        Room room = roomService.getRoomByNumber(roomNum);
-
-        if (room == null) {
-            UiUtils.printError("Room not found.");
-            return;
-        }
-
-        UiUtils.printHeader("COMPLETE ROOM DETAILS");
-
-        Table detailTable = UiUtils.createDataTable(2);
-        detailTable.addCell("Room Number:");
-        detailTable.addCell(room.getRoomNumber());
-        detailTable.addCell("Room Type:");
-        detailTable.addCell(room.getRoomTypeName());
-        detailTable.addCell("Price per Night:");
-        detailTable.addCell("$" + room.getPricePerNight());
-        detailTable.addCell("Status:");
-        detailTable.addCell(String.valueOf(room.getStatus()));
-        detailTable.addCell("Features:");
-        detailTable.addCell(room.getDescription() != null ? room.getDescription() : "No features listed");
-        System.out.println(detailTable.render());
-
-        System.out.println("\nPress Enter to continue...");
-        scanner.nextLine();
+        viewRoomDetailsByInput();
     }
 
     // ==================== USER MANAGEMENT ====================
