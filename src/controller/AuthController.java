@@ -19,13 +19,15 @@ public class AuthController {
 
     public void showLoginMenu() throws SQLException {
         while (true) {
+            UiUtils.clearScreen();
+            UiUtils.printBanner();
             UiUtils.printHeader("HOTEL RESERVATION SYSTEM");
-            UiUtils.printMenu(null,
+            UiUtils.printMenu("Main Menu",
                     "1. Login",
                     "2. Register",
                     "3. Exit");
 
-            System.out.print("Select an option (1-3): ");
+            System.out.print("Enter choice : ");
             String choice = scanner.nextLine().trim();
 
             switch (choice) {

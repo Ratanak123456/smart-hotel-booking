@@ -29,15 +29,16 @@ public class AdminPanel {
 
     public void start() throws SQLException {
         while (true) {
+            UiUtils.clearScreen();
             UiUtils.printHeader("ADMIN PANEL - Welcome, " + loggedInAdmin.getUsername());
 
-            UiUtils.printMenu(null,
+            UiUtils.printMenu("Main Menu",
                     "1. Room Management",
                     "2. User Management",
                     "3. Booking Management",
                     "4. Logout");
 
-            System.out.print("Select an option (1-4): ");
+            System.out.print("Enter choice : ");
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
@@ -64,7 +65,7 @@ public class AdminPanel {
         while (true) {
             UiUtils.printHeader("ROOM MANAGEMENT");
 
-            UiUtils.printMenu(null,
+            UiUtils.printMenu("Room Management Options",
                     "1. View all rooms",
                     "2. Search/Filter by room type",
                     "3. Search/Filter by availability status",
@@ -73,7 +74,7 @@ public class AdminPanel {
                     "6. View detailed room features",
                     "7. Back to admin menu");
 
-            System.out.print("Select an option (1-7): ");
+            System.out.print("Enter choice : ");
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
@@ -104,90 +105,114 @@ public class AdminPanel {
     }
 
     private void filterByRoomType() throws SQLException {
-        UiUtils.printHeader("Available Room Types");
-        UiUtils.printMenu(null,
-                "1. SINGLE",
-                "2. DOUBLE",
-                "3. SUITE",
-                "4. DELUXE",
-                "5. PENTHOUSE");
+        while (true) {
+            UiUtils.printHeader("Available Room Types");
+            UiUtils.printMenu("Select Room Type",
+                    "1. SINGLE",
+                    "2. DOUBLE",
+                    "3. SUITE",
+                    "4. DELUXE",
+                    "5. PENTHOUSE");
+            System.out.println("(Leave empty to go back)");
 
-        System.out.print("Select room type (1-5): ");
-        String choice = scanner.nextLine().trim();
-        String roomType = null;
-        switch (choice) {
-            case "1": roomType = "SINGLE"; break;
-            case "2": roomType = "DOUBLE"; break;
-            case "3": roomType = "SUITE"; break;
-            case "4": roomType = "DELUXE"; break;
-            case "5": roomType = "PENTHOUSE"; break;
-            default:
-                UiUtils.printError("Invalid option.");
+            System.out.print("Select room type (1-5): ");
+            String choice = scanner.nextLine().trim();
+
+            if (choice.isEmpty()) {
                 return;
+            }
+
+            String roomType = null;
+            switch (choice) {
+                case "1": roomType = "SINGLE"; break;
+                case "2": roomType = "DOUBLE"; break;
+                case "3": roomType = "SUITE"; break;
+                case "4": roomType = "DELUXE"; break;
+                case "5": roomType = "PENTHOUSE"; break;
+                default:
+                    UiUtils.printError("Invalid option. Please try again.");
+                    continue;
+            }
+            displayRoomsPaginated(roomType, null);
         }
-        displayRoomsPaginated(roomType, null);
     }
 
     private void filterByRoomStatus() throws SQLException {
-        UiUtils.printHeader("Room Status Options");
-        UiUtils.printMenu(null,
-                "1. Available",
-                "2. Maintenance");
+        while (true) {
+            UiUtils.printHeader("Room Status Options");
+            UiUtils.printMenu("Select Status",
+                    "1. Available",
+                    "2. Maintenance");
+            System.out.println("(Leave empty to go back)");
 
-        System.out.print("Select status (1-2): ");
-        String choice = scanner.nextLine().trim();
-        String status = null;
-        switch (choice) {
-            case "1": status = "AVAILABLE"; break;
-            case "2": status = "MAINTENANCE"; break;
-            default:
-                UiUtils.printError("Invalid option.");
+            System.out.print("Select status (1-2): ");
+            String choice = scanner.nextLine().trim();
+
+            if (choice.isEmpty()) {
                 return;
+            }
+
+            String status = null;
+            switch (choice) {
+                case "1": status = "AVAILABLE"; break;
+                case "2": status = "MAINTENANCE"; break;
+                default:
+                    UiUtils.printError("Invalid option. Please try again.");
+                    continue;
+            }
+            displayRoomsPaginated(null, status);
         }
-        displayRoomsPaginated(null, status);
     }
 
     private void filterByTypeAndStatus() throws SQLException {
-        UiUtils.printHeader("Filter by Type AND Status");
+        while (true) {
+            UiUtils.printHeader("Filter by Type AND Status");
 
-        // Select room type
-        UiUtils.printMenu("Select Room Type",
-                "1. SINGLE",
-                "2. DOUBLE",
-                "3. SUITE",
-                "4. DELUXE",
-                "5. PENTHOUSE");
+            // Select room type
+            UiUtils.printMenu("Select Room Type",
+                    "1. SINGLE",
+                    "2. DOUBLE",
+                    "3. SUITE",
+                    "4. DELUXE",
+                    "5. PENTHOUSE");
+            System.out.println("(Leave empty to go back)");
 
-        System.out.print("Select room type (1-5): ");
-        String typeChoice = scanner.nextLine().trim();
-        String roomType = null;
-        switch (typeChoice) {
-            case "1": roomType = "SINGLE"; break;
-            case "2": roomType = "DOUBLE"; break;
-            case "3": roomType = "SUITE"; break;
-            case "4": roomType = "DELUXE"; break;
-            case "5": roomType = "PENTHOUSE"; break;
-            default:
-                UiUtils.printError("Invalid option.");
-                return;
+            System.out.print("Select room type (1-5): ");
+            String typeChoice = scanner.nextLine().trim();
+            if (typeChoice.isEmpty()) return;
+
+            String roomType = null;
+            switch (typeChoice) {
+                case "1": roomType = "SINGLE"; break;
+                case "2": roomType = "DOUBLE"; break;
+                case "3": roomType = "SUITE"; break;
+                case "4": roomType = "DELUXE"; break;
+                case "5": roomType = "PENTHOUSE"; break;
+                default:
+                    UiUtils.printError("Invalid option. Please try again.");
+                    continue;
+            }
+
+            // Select status
+            UiUtils.printMenu("Select Room Status",
+                    "1. Available",
+                    "2. Maintenance");
+            System.out.println("(Leave empty to go back to type selection)");
+
+            System.out.print("Select status (1-2): ");
+            String statusChoice = scanner.nextLine().trim();
+            if (statusChoice.isEmpty()) continue; // Go back to type selection
+
+            String status = null;
+            switch (statusChoice) {
+                case "1": status = "AVAILABLE"; break;
+                case "2": status = "MAINTENANCE"; break;
+                default:
+                    UiUtils.printError("Invalid option. Please try again.");
+                    continue;
+            }
+            displayRoomsFiltered(roomType, status);
         }
-
-        // Select status
-        UiUtils.printMenu("Select Room Status",
-                "1. Available",
-                "2. Maintenance");
-
-        System.out.print("Select status (1-2): ");
-        String statusChoice = scanner.nextLine().trim();
-        String status = null;
-        switch (statusChoice) {
-            case "1": status = "AVAILABLE"; break;
-            case "2": status = "MAINTENANCE"; break;
-            default:
-                UiUtils.printError("Invalid option.");
-                return;
-        }
-        displayRoomsFiltered(roomType, status);
     }
 
     private void displayRoomsFiltered(String roomType, String status) throws SQLException {
@@ -218,7 +243,7 @@ public class AdminPanel {
                     table.addCell("$" + room.getPricePerNight());
                     table.addCell(String.valueOf(room.getStatus()));
                 }
-                System.out.println(table.render());
+                System.out.println(UiUtils.renderTable(table));
             }
 
             // Navigation
@@ -277,7 +302,7 @@ public class AdminPanel {
         detailTable.addCell(String.valueOf(room.getStatus()));
         detailTable.addCell("Features:");
         detailTable.addCell(room.getDescription() != null ? room.getDescription() : "No features listed");
-        System.out.println(detailTable.render());
+        System.out.println(UiUtils.renderTable(detailTable));
     }
 
     private void displayRoomsPaginated(String roomType, String status) throws SQLException {
@@ -327,7 +352,7 @@ public class AdminPanel {
                     }
                     table.addCell(features);
                 }
-                System.out.println(table.render());
+                System.out.println(UiUtils.renderTable(table));
             }
 
             // Navigation
@@ -428,7 +453,7 @@ public class AdminPanel {
                     }
                     table.addCell(features);
                 }
-                System.out.println(table.render());
+                System.out.println(UiUtils.renderTable(table));
             }
 
             // Navigation
@@ -468,13 +493,13 @@ public class AdminPanel {
         while (true) {
             UiUtils.printHeader("USER MANAGEMENT");
 
-            UiUtils.printMenu(null,
+            UiUtils.printMenu("User Management Options",
                     "1. List all users",
                     "2. Search user by username",
                     "3. Delete user",
                     "4. Back to admin menu");
 
-            System.out.print("Select an option (1-4): ");
+            System.out.print("Enter choice : ");
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
@@ -525,7 +550,7 @@ public class AdminPanel {
                     table.addCell(user.getRole());
                     table.addCell(user.getDeletedAt() == null ? "Active" : "Deleted");
                 }
-                System.out.println(table.render());
+                System.out.println(UiUtils.renderTable(table));
             }
 
             // Navigation
@@ -601,7 +626,7 @@ public class AdminPanel {
                     table.addCell(user.getRole());
                     table.addCell(user.getDeletedAt() == null ? "Active" : "Deleted");
                 }
-                System.out.println(table.render());
+                System.out.println(UiUtils.renderTable(table));
             }
 
             // Navigation
@@ -679,13 +704,13 @@ public class AdminPanel {
         while (true) {
             UiUtils.printHeader("BOOKING MANAGEMENT");
 
-            UiUtils.printMenu(null,
+            UiUtils.printMenu("Booking Management Options",
                     "1. View all bookings",
                     "2. View pending bookings",
                     "3. Approve/Reject booking",
                     "4. Back to admin menu");
 
-            System.out.print("Select an option (1-4): ");
+            System.out.print("Enter choice : ");
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
@@ -736,7 +761,7 @@ public class AdminPanel {
             table.addCell("$" + booking.getTotalPrice());
             table.addCell(booking.getStatus().name());
         }
-        System.out.println(table.render());
+        System.out.println(UiUtils.renderTable(table));
 
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
@@ -772,7 +797,7 @@ public class AdminPanel {
             table.addCell("$" + booking.getTotalPrice());
             table.addCell(booking.getStatus().name());
         }
-        System.out.println(table.render());
+        System.out.println(UiUtils.renderTable(table));
 
         System.out.println("\nPress Enter to continue...");
         scanner.nextLine();
@@ -809,7 +834,7 @@ public class AdminPanel {
             table.addCell("$" + booking.getTotalPrice());
             table.addCell(booking.getStatus().name());
         }
-        System.out.println(table.render());
+        System.out.println(UiUtils.renderTable(table));
 
         // Get booking ID
         System.out.print("\nEnter Booking ID to process: ");
@@ -843,7 +868,7 @@ public class AdminPanel {
             detailTable.addCell(booking.getCheckOutDate().toString());
             detailTable.addCell("Total:");
             detailTable.addCell("$" + booking.getTotalPrice());
-            System.out.println(detailTable.render());
+            System.out.println(UiUtils.renderTable(detailTable));
 
             // Approve or reject
             System.out.print("Approve (a) or Reject (r)? ");

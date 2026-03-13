@@ -20,42 +20,63 @@ public class UiUtils {
     private static final CellStyle CENTER_ALIGN = new CellStyle(CellStyle.HorizontalAlign.center);
     private static final CellStyle RIGHT_ALIGN = new CellStyle(CellStyle.HorizontalAlign.right);
 
+    public static void clearScreen() {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+    }
+
+    public static void printBanner() {
+        System.out.println(ANSI_CYAN +
+                "██╗  ██╗ ██████╗ ████████╗███████╗██╗     \n" +
+                "██║  ██║██╔═══██╗╚══██╔══╝██╔════╝██║     \n" +
+                "███████║██║   ██║   ██║   █████╗  ██║     \n" +
+                "██╔══██║██║   ██║   ██║   ██╔══╝  ██║     \n" +
+                "██║  ██║╚██████╔╝   ██║   ███████╗███████╗\n" +
+                "╚═╝  ╚═╝ ╚═════╝    ╚═╝   ╚══════╝╚══════╝" + ANSI_RESET);
+    }
+
     public static void printHeader(String title) {
-        Table table = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER_WIDE);
-        table.addCell(ANSI_CYAN + " " + title + " " + ANSI_RESET, CENTER_ALIGN);
-        System.out.println(table.render());
+        int width = Math.max(35, title.length() + 4);
+        String line = "━".repeat(width);
+        int padding = (width - title.length()) / 2;
+        String leftPad = " ".repeat(padding);
+        String rightPad = " ".repeat(width - title.length() - padding);
+
+        System.out.println(ANSI_CYAN + "┏" + line + "┓" + ANSI_RESET);
+        System.out.println(ANSI_CYAN + "┃" + ANSI_RESET + leftPad + title + rightPad + ANSI_CYAN + "┃" + ANSI_RESET);
+        System.out.println(ANSI_CYAN + "┗" + line + "┛" + ANSI_RESET);
     }
 
     public static void printMenu(String title, String... options) {
         if (title != null) {
-            Table titleTable = new Table(1, BorderStyle.UNICODE_BOX_DOUBLE_BORDER);
-            titleTable.addCell(ANSI_CYAN + title + ANSI_RESET, CENTER_ALIGN);
-            System.out.println(titleTable.render());
+            System.out.println(ANSI_YELLOW + "───────── " + title + " ─────────" + ANSI_RESET);
         }
-
-        Table menuTable = new Table(1, BorderStyle.UNICODE_ROUND_BOX);
         for (String option : options) {
-            menuTable.addCell(" " + option + " ");
+            System.out.println(ANSI_PURPLE + "❯ " + ANSI_RESET + option);
         }
-        System.out.println(menuTable.render());
+        System.out.println(ANSI_YELLOW + "─────────────────────────────" + ANSI_RESET);
+    }
+
+    public static String renderTable(Table table) {
+        return ANSI_CYAN + table.render() + ANSI_RESET;
     }
 
     public static void printMessage(String message) {
         Table table = new Table(1, BorderStyle.UNICODE_ROUND_BOX);
         table.addCell(" " + message + " ");
-        System.out.println(table.render());
+        System.out.println(renderTable(table));
     }
 
     public static void printSuccess(String message) {
         Table table = new Table(1, BorderStyle.UNICODE_ROUND_BOX);
         table.addCell(ANSI_GREEN + " ✓ " + message + " " + ANSI_RESET);
-        System.out.println(table.render());
+        System.out.println(renderTable(table));
     }
 
     public static void printError(String message) {
         Table table = new Table(1, BorderStyle.UNICODE_ROUND_BOX);
         table.addCell(ANSI_RED + " ✗ " + message + " " + ANSI_RESET);
-        System.out.println(table.render());
+        System.out.println(renderTable(table));
     }
 
     public static Table createTable(int columns) {

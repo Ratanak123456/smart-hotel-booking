@@ -7,7 +7,6 @@ import model.entities.Invoice;
 import model.service.RoomService;
 import model.service.BookingService;
 import model.service.UserService;
-import model.service.TelegramService;
 import org.nocrala.tools.texttablefmt.Table;
 
 import java.sql.SQLException;
@@ -35,17 +34,17 @@ public class UserPanel {
     // Entry point – main menu
     public void start() throws SQLException {
         while (true) {
+            UiUtils.clearScreen();
             UiUtils.printHeader("USER PANEL - Welcome, " + loggedInUser.getUsername());
 
-            UiUtils.printMenu(null,
+            UiUtils.printMenu("Main Menu",
                     "1. View Rooms",
                     "2. Make a Booking",
                     "3. My Bookings",
                     "4. My Invoices",
-                    "5. Telegram Settings",
-                    "6. Logout");
+                    "5. Logout");
 
-            System.out.print("Select an option (1-6): ");
+            System.out.print("Enter choice : ");
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
@@ -62,9 +61,6 @@ public class UserPanel {
                     viewMyInvoices();
                     break;
                 case "5":
-                    telegramSettings();
-                    break;
-                case "6":
                     UiUtils.printMessage("Logging out...");
                     return;
                 default:
@@ -171,7 +167,7 @@ public class UserPanel {
         summaryTable.addCell("-$" + discount);
         summaryTable.addCell("TOTAL:");
         summaryTable.addCell("$" + totalPrice);
-        System.out.println(summaryTable.render());
+        System.out.println(UiUtils.renderTable(summaryTable));
 
         // Confirm
         System.out.print("Confirm booking? (y/n): ");
@@ -205,7 +201,7 @@ public class UserPanel {
             bookingInfoTable.addCell(createdBooking.getStatus().name() + " (Waiting for admin approval)");
             bookingInfoTable.addCell("Total Price:");
             bookingInfoTable.addCell("$" + createdBooking.getTotalPrice());
-            System.out.println(bookingInfoTable.render());
+            System.out.println(UiUtils.renderTable(bookingInfoTable));
 
             System.out.println("\nPress Enter to continue...");
             scanner.nextLine();
@@ -247,7 +243,7 @@ public class UserPanel {
             table.addCell("$" + booking.getTotalPrice());
             table.addCell(booking.getStatus().name());
         }
-        System.out.println(table.render());
+        System.out.println(UiUtils.renderTable(table));
 
         // View details
         System.out.print("\nEnter Booking ID to view details (or press Enter to go back): ");
@@ -294,9 +290,28 @@ public class UserPanel {
         detailTable.addCell(booking.getStatus().name());
         detailTable.addCell("Created:");
         detailTable.addCell(booking.getCreatedAt().toString());
-        System.out.println(detailTable.render());
+        System.out.println(UiUtils.renderTable(detailTable));
 
-        // Show invoice option
+        // Handle PENDING booking (Cancel option)
+        if (booking.getStatus() == Booking.BookingStatus.PENDING) {
+            System.out.print("\nCancel this booking? (y/n): ");
+            String cancelChoice = scanner.nextLine().trim().toLowerCase();
+            if (cancelChoice.equals("y")) {
+                try {
+                    boolean success = bookingService.cancelBooking(booking.getId(), loggedInUser.getId());
+                    if (success) {
+                        UiUtils.printSuccess("Booking cancelled successfully!");
+                        return; // Return to list
+                    } else {
+                        UiUtils.printError("Failed to cancel booking.");
+                    }
+                } catch (Exception e) {
+                    UiUtils.printError("Error: " + e.getMessage());
+                }
+            }
+        }
+
+        // Show invoice option (only if exists)
         Invoice invoice = bookingService.getInvoiceByBookingId(booking.getId());
         if (invoice != null) {
             System.out.print("\nView invoice? (y/n): ");
@@ -340,7 +355,7 @@ public class UserPanel {
             table.addCell("$" + invoice.getTotalAmount());
             table.addCell(invoice.getInvoiceStatus().name());
         }
-        System.out.println(table.render());
+        System.out.println(UiUtils.renderTable(table));
 
         // View details
         System.out.print("\nEnter Invoice Number to view details (or press Enter to go back): ");
@@ -392,7 +407,7 @@ public class UserPanel {
         detailTable.addCell("$" + invoice.getTotalAmount());
         detailTable.addCell("Payment Status:");
         detailTable.addCell(invoice.getInvoiceStatus().name());
-        System.out.println(detailTable.render());
+        System.out.println(UiUtils.renderTable(detailTable));
     }
 
     // ============================================
@@ -402,7 +417,7 @@ public class UserPanel {
         while (true) {
             UiUtils.printHeader("VIEW ROOMS");
 
-            UiUtils.printMenu(null,
+            UiUtils.printMenu("Room Search Options",
                     "1. View all rooms (with features)",
                     "2. Filter by room type",
                     "3. Filter by availability status",
@@ -411,7 +426,7 @@ public class UserPanel {
                     "6. SEARCH AVAILABLE BY DATE",
                     "7. Back to Menu");
 
-            System.out.print("Select an option (1-7): ");
+            System.out.print("Enter choice : ");
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
@@ -509,7 +524,7 @@ public class UserPanel {
                     }
                     table.addCell(features);
                 }
-                System.out.println(table.render());
+                System.out.println(UiUtils.renderTable(table));
             }
 
             // Navigation (simplified for brevity)
@@ -664,7 +679,7 @@ public class UserPanel {
                     table.addCell("$" + room.getPricePerNight());
                     table.addCell(String.valueOf(room.getStatus()));
                 }
-                System.out.println(table.render());
+                System.out.println(UiUtils.renderTable(table));
             }
 
             // Navigation
@@ -723,7 +738,7 @@ public class UserPanel {
         detailTable.addCell(String.valueOf(room.getStatus()));
         detailTable.addCell("Features:");
         detailTable.addCell(room.getDescription() != null ? room.getDescription() : "No features listed");
-        System.out.println(detailTable.render());
+        System.out.println(UiUtils.renderTable(detailTable));
     }
 
     private void displayRoomsPaginated(String roomType, String status) throws SQLException {
@@ -773,7 +788,7 @@ public class UserPanel {
                     }
                     table.addCell(features);
                 }
-                System.out.println(table.render());
+                System.out.println(UiUtils.renderTable(table));
             }
 
             // Navigation
@@ -813,44 +828,5 @@ public class UserPanel {
 
     private void viewDetailedRoomFeatures() throws SQLException {
         viewRoomDetailsByInput();
-    }
-
-    private void telegramSettings() {
-        UiUtils.printHeader("TELEGRAM SETTINGS");
-
-        Long currentChatId = loggedInUser.getTelegramChatId();
-        if (currentChatId != null) {
-            System.out.println("Currently connected Telegram Chat ID: " + currentChatId);
-        } else {
-            System.out.println("Telegram is not connected.");
-        }
-
-        System.out.println("\nTo connect your Telegram:");
-        System.out.println("1. Find your Chat ID (you can use @userinfobot on Telegram)");
-        System.out.println("2. Enter your Chat ID below to receive booking notifications.");
-
-        System.out.print("\nEnter your Telegram Chat ID (or press Enter to cancel): ");
-        String input = scanner.nextLine().trim();
-
-        if (input.isEmpty()) return;
-
-        try {
-            long chatId = Long.parseLong(input);
-            boolean success = userService.updateTelegramChatId(loggedInUser.getId(), chatId);
-            if (success) {
-                loggedInUser.setTelegramChatId(chatId);
-                UiUtils.printSuccess("Telegram Chat ID updated successfully!");
-                
-                // Send a test message
-                TelegramService telegramService = new TelegramService();
-                telegramService.sendMessage(chatId, "<b>Success!</b> Your account is now linked to our Hotel Reservation System. You will receive notifications here.");
-            } else {
-                UiUtils.printError("Failed to update Telegram Chat ID.");
-            }
-        } catch (NumberFormatException e) {
-            UiUtils.printError("Invalid Chat ID. Please enter a numeric value.");
-        } catch (SQLException e) {
-            UiUtils.printError("Database error: " + e.getMessage());
-        }
     }
 }

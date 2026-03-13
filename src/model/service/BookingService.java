@@ -171,6 +171,30 @@ public class BookingService {
         return updated;
     }
 
+    public boolean cancelBooking(int bookingId, int userId) throws Exception {
+        Booking booking = bookingDao.getBookingById(bookingId);
+        if (booking == null) {
+            throw new Exception("Booking not found.");
+        }
+
+        if (booking.getUserId() != userId) {
+            throw new Exception("You are not authorized to cancel this booking.");
+        }
+
+        if (booking.getStatus() != Booking.BookingStatus.PENDING) {
+            throw new Exception("Only PENDING bookings can be cancelled. This booking is already " + booking.getStatus() + ".");
+        }
+
+        boolean updated = bookingDao.updateStatus(bookingId, "CANCELLED");
+        if (updated) {
+            // Notify user
+            if (booking.getTelegramChatId() != null) {
+                telegramService.notifyBookingStatus(booking.getTelegramChatId(), String.valueOf(booking.getId()), "CANCELLED", booking.getRoomNumber());
+            }
+        }
+        return updated;
+    }
+
     public boolean rejectBooking(int bookingId) throws SQLException {
         Booking booking = bookingDao.getBookingById(bookingId);
         if (booking == null) {
