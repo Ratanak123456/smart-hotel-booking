@@ -111,20 +111,22 @@ public class TelegramBot implements Runnable {
         // 1. Global Commands
         if (text.equals("/start")) {
             session.reset();
-            reply(chatId, "<b>🏨 Welcome to Smart Hotel!</b>\n\n" +
-                          "Your personal assistant for booking luxury stays.\n\n" +
-                          "<b>Commands:</b>\n" +
-                          "🔑 /login - Access your account\n" +
-                          "📝 /register - Create an account\n" +
-                          "🏠 /rooms - Browse our rooms\n" +
-                          "📅 /book - Start a reservation\n" +
-                          "❌ /cancel - Stop current action");
+            showMainMenu(chatId, session);
             return;
         }
         
         if (text.equals("/cancel")) {
             session.reset();
             reply(chatId, "⏹ <b>Action cancelled.</b> Returning to home.");
+            showMainMenu(chatId, session);
+            return;
+        }
+
+        if (text.equals("/logout")) {
+            session.currentUser = null;
+            session.reset();
+            reply(chatId, "👋 <b>Logged out successfully.</b>");
+            showMainMenu(chatId, session);
             return;
         }
 
@@ -143,11 +145,29 @@ public class TelegramBot implements Runnable {
             case REGISTER_PASSWORD:
                 handleRegisterFlow(chatId, session, text);
                 break;
-            case BOOKING_SELECT_ROOM:
             case BOOKING_DATE_START:
             case BOOKING_DATE_END:
+            case BOOKING_SELECT_ROOM:
                 handleBookingFlow(chatId, session, text);
                 break;
+        }
+    }
+
+    private void showMainMenu(long chatId, UserSession session) {
+        if (session.currentUser == null) {
+            reply(chatId, "<b>🏨 Welcome to Smart Hotel!</b>\n\n" +
+                          "Your personal assistant for booking luxury stays.\n\n" +
+                          "<b>Commands:</b>\n" +
+                          "🔑 /login - Access your account\n" +
+                          "📝 /register - Create an account");
+        } else {
+            reply(chatId, "<b>───────── Main Menu ─────────</b>\n" +
+                          "❯ /rooms - View Rooms\n" +
+                          "❯ /book - Make a Booking\n" +
+                          "❯ /bookings - My Bookings\n" +
+                          "❯ /invoices - My Invoices\n" +
+                          "❯ /logout - Log Out\n" +
+                          "<b>─────────────────────────────</b>");
         }
     }
 
@@ -166,9 +186,74 @@ public class TelegramBot implements Runnable {
                 reply(chatId, "📅 <b>NEW BOOKING</b>\nWhen would you like to arrive?\n\n<i>Format: YYYY-MM-DD (e.g., 2026-03-05)</i>");
             }
         } else if (text.equals("/rooms")) {
-            showRooms(chatId);
+            if (session.currentUser == null) {
+                reply(chatId, "⚠️ <b>Wait!</b> You need to /login first to view our rooms.");
+            } else {
+                showRooms(chatId);
+            }
+        } else if (text.equals("/bookings")) {
+            if (session.currentUser == null) {
+                reply(chatId, "⚠️ Please /login first.");
+            } else {
+                showUserBookings(chatId, session);
+            }
+        } else if (text.equals("/invoices")) {
+            if (session.currentUser == null) {
+                reply(chatId, "⚠️ Please /login first.");
+            } else {
+                showUserInvoices(chatId, session);
+            }
         } else {
-            reply(chatId, "🤔 <b>I didn't quite get that.</b>\nTry /start to see what I can do!");
+            reply(chatId, "🤔 <b>I didn't quite get that.</b>\nTry /start to see the menu!");
+        }
+    }
+
+    private void showUserBookings(long chatId, UserSession session) {
+        try {
+            List<Booking> bookings = bookingService.getUserBookings(session.currentUser.getId());
+            if (bookings.isEmpty()) {
+                reply(chatId, "📭 <b>You have no bookings yet.</b>\nTry /book to start one!");
+                return;
+            }
+
+            StringBuilder msg = new StringBuilder("📅 <b>YOUR BOOKINGS</b>\n\n");
+            for (Booking b : bookings) {
+                String statusEmoji = b.getStatus() == Booking.BookingStatus.PENDING ? "⏳" : 
+                                   b.getStatus() == Booking.BookingStatus.ACTIVE ? "✅" : "❌";
+                msg.append(String.format("<b>#%d</b> | Room %s\n" +
+                                       "📅 %s to %s\n" +
+                                       "Status: %s <b>%s</b>\n" +
+                                       "Total: <b>$%s</b>\n\n",
+                           b.getId(), b.getRoomNumber(), 
+                           b.getCheckInDate(), b.getCheckOutDate(),
+                           statusEmoji, b.getStatus(), b.getTotalPrice()));
+            }
+            reply(chatId, msg.toString());
+        } catch (SQLException e) {
+            reply(chatId, "⚠️ <b>Error:</b> Could not fetch bookings.");
+        }
+    }
+
+    private void showUserInvoices(long chatId, UserSession session) {
+        try {
+            List<model.entities.Invoice> invoices = bookingService.getUserInvoices(session.currentUser.getId());
+            if (invoices.isEmpty()) {
+                reply(chatId, "🧾 <b>No invoices found.</b>\nInvoices are generated when your booking is approved.");
+                return;
+            }
+
+            StringBuilder msg = new StringBuilder("🧾 <b>YOUR INVOICES</b>\n\n");
+            for (model.entities.Invoice inv : invoices) {
+                msg.append(String.format("<b>%s</b>\n" +
+                                       "Room %s | %s nights\n" +
+                                       "Total: <b>$%s</b>\n" +
+                                       "Status: ✅ <b>PAID</b>\n\n",
+                           inv.getInvoiceNumber(), inv.getRoomNumber(), 
+                           inv.getNights(), inv.getTotalAmount()));
+            }
+            reply(chatId, msg.toString());
+        } catch (SQLException e) {
+            reply(chatId, "⚠️ <b>Error:</b> Could not fetch invoices.");
         }
     }
 
@@ -189,9 +274,11 @@ public class TelegramBot implements Runnable {
                     }
                     session.state = State.NONE;
                     reply(chatId, "✅ <b>Login Successful!</b>\nWelcome back, <b>" + user.getUsername() + "</b>!\n\nReady to /book a room?");
+                    showMainMenu(chatId, session);
                 } else {
                     session.state = State.NONE;
                     reply(chatId, "❌ <b>Login Failed.</b>\nInvalid credentials. Try /login again.");
+                    showMainMenu(chatId, session);
                 }
             } catch (Exception e) {
                 reply(chatId, "⚠️ <b>Error:</b> " + e.getMessage());
@@ -229,9 +316,11 @@ public class TelegramBot implements Runnable {
                     if (success) {
                         session.state = State.NONE;
                         reply(chatId, "✨ <b>Account Created!</b>\nYou're all set. Now please /login.");
+                        showMainMenu(chatId, session);
                     } else {
                         reply(chatId, "❌ <b>Registration failed.</b>\nPlease try /register again.");
                         session.state = State.NONE;
+                        showMainMenu(chatId, session);
                     }
                 } catch (Exception e) {
                     reply(chatId, "⚠️ <b>Error:</b> " + e.getMessage() + "\nTry /register again.");

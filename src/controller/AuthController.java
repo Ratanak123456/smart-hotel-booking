@@ -101,6 +101,7 @@ public class AuthController {
             try {
                 User user = userService.login(username, password);
                 if (user != null && (user.getRole().equals("USER") || user.getRole().equals("ADMIN"))) {
+                    UiUtils.showLoadingAnimation("Authenticating user...");
                     UiUtils.printSuccess("Login successful! Welcome, " + user.getUsername() + " (" + user.getRole() + ")");
 
                     if (user.getRole().equals("ADMIN")) {

@@ -1,7 +1,13 @@
 import controller.AuthController;
+import model.service.TelegramBot;
 
 public class App {
     public static void main(String[] args) {
+        // Start Telegram Bot in a background thread
+        Thread botThread = new Thread(new TelegramBot());
+        botThread.setDaemon(true);
+        botThread.start();
+
         try {
             AuthController authController = new AuthController();
             authController.showLoginMenu();
