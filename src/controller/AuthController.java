@@ -80,50 +80,52 @@ public class AuthController {
         }
     }
 
-    private int loginAttempts = 0;
-    private static final int MAX_ATTEMPTS = 3;
-
     private void handleLogin() throws SQLException {
-        UiUtils.printHeader("LOGIN (Attempt " + (loginAttempts + 1) + " of " + MAX_ATTEMPTS + ")");
+        int attempts = 0;
+        final int MAX_ATTEMPTS = 3;
 
-        System.out.print("Username: ");
-        String username = scanner.nextLine().trim();
+        while (attempts < MAX_ATTEMPTS) {
+            UiUtils.printHeader("USER LOGIN (Attempt " + (attempts + 1) + " of " + MAX_ATTEMPTS + ")");
+            System.out.println("(Leave any field empty to cancel)");
 
-        System.out.print("Password: ");
-        String password = scanner.nextLine().trim();
+            System.out.print("Username: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) return;
 
-        try {
-            User user = userService.login(username, password);
-            if (user != null && (user.getRole().equals("USER") || user.getRole().equals("ADMIN"))) {
-                UiUtils.printSuccess("Login successful! Welcome, " + user.getUsername() + " (" + user.getRole() + ")");
-                loginAttempts = 0; // Reset on success
+            System.out.print("Password: ");
+            String password = scanner.nextLine().trim();
+            if (password.isEmpty()) return;
 
-                if (user.getRole().equals("ADMIN")) {
-                    // Enter admin panel
-                    view.AdminPanel adminPanel = new view.AdminPanel(user);
-                    adminPanel.start();
+            try {
+                User user = userService.login(username, password);
+                if (user != null && (user.getRole().equals("USER") || user.getRole().equals("ADMIN"))) {
+                    UiUtils.printSuccess("Login successful! Welcome, " + user.getUsername() + " (" + user.getRole() + ")");
+
+                    if (user.getRole().equals("ADMIN")) {
+                        // Enter admin panel
+                        view.AdminPanel adminPanel = new view.AdminPanel(user);
+                        adminPanel.start();
+                    } else {
+                        // Enter user panel with booking features
+                        UserPanel userPanel = new UserPanel(user);
+                        userPanel.start();
+                    }
+                    return; // Return to main menu after logout
                 } else {
-                    // Enter user panel with booking features
-                    UserPanel userPanel = new UserPanel(user);
-                    userPanel.start();
+                    attempts++;
+                    if (attempts < MAX_ATTEMPTS) {
+                        UiUtils.printError("Invalid username or password. You have " + (MAX_ATTEMPTS - attempts) + " attempts left.");
+                    } else {
+                        UiUtils.printError("Too many failed attempts. Returning to main menu.");
+                    }
                 }
-
-                // After returning, back to login menu
-            } else {
-                loginAttempts++;
-                UiUtils.printError("Invalid username or password.");
-
-                if (loginAttempts >= MAX_ATTEMPTS) {
-                    UiUtils.printError("Too many failed attempts. The program will now turn off.");
-                    System.exit(0);
-                } else {
-                    System.out.println("You have " + (MAX_ATTEMPTS - loginAttempts) + " attempts remaining.");
-                }
+            } catch (SQLException e) {
+                UiUtils.printError("Database error: " + e.getMessage());
+                return;
+            } catch (Exception e) {
+                UiUtils.printError("Login error: " + e.getMessage());
+                return;
             }
-        } catch (SQLException e) {
-            UiUtils.printError("Database error: " + e.getMessage());
-        } catch (Exception e) {
-            UiUtils.printError("Login error: " + e.getMessage());
         }
     }
 }

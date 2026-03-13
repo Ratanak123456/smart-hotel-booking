@@ -25,6 +25,11 @@ public class UserService {
     }
 
     public boolean register(String username, String email, String phoneNumber, String password, Long telegramChatId) throws Exception {
+        // Validation: Username must not contain spaces
+        if (username.contains(" ")) {
+            throw new ValidationException("Username cannot contain spaces.");
+        }
+
         // Validation: Email must end with @gmail.com
         if (!email.toLowerCase().endsWith("@gmail.com")) {
             throw new ValidationException("Invalid email. Email must end with @gmail.com.");
@@ -33,12 +38,12 @@ public class UserService {
         // Validation: Strong password
         validatePassword(password);
 
-        // Check if username or email already exists
+        // Check if username or email already exists in database
         if (userDAO.findByUsername(username) != null) {
-            throw new Exception("Username is already taken.");
+            throw new ValidationException("Username is already taken. Please choose another one.");
         }
         if (userDAO.findByEmail(email) != null) {
-            throw new Exception("Email is already registered.");
+            throw new ValidationException("Email is already registered. Please use another email.");
         }
 
         User newUser = new User();

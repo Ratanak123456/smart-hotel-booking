@@ -529,90 +529,111 @@ public class UserPanel {
 
     // All remaining methods unchanged (they only use RoomService)
     private void filterByRoomType() throws SQLException {
-        UiUtils.printHeader("Available Room Types");
-        UiUtils.printMenu(null,
-                "1. SINGLE",
-                "2. DOUBLE",
-                "3. SUITE",
-                "4. DELUXE",
-                "5. PENTHOUSE");
+        while (true) {
+            UiUtils.printHeader("Available Room Types");
+            UiUtils.printMenu("Select Room Type",
+                    "1. SINGLE",
+                    "2. DOUBLE",
+                    "3. SUITE",
+                    "4. DELUXE",
+                    "5. PENTHOUSE");
+            System.out.println("(Leave empty to go back)");
 
-        System.out.print("Select room type (1-5): ");
-        String choice = scanner.nextLine().trim();
-        String roomType = null;
-        switch (choice) {
-            case "1": roomType = "SINGLE"; break;
-            case "2": roomType = "DOUBLE"; break;
-            case "3": roomType = "SUITE"; break;
-            case "4": roomType = "DELUXE"; break;
-            case "5": roomType = "PENTHOUSE"; break;
-            default:
-                UiUtils.printError("Invalid option.");
+            System.out.print("Select room type (1-5): ");
+            String choice = scanner.nextLine().trim();
+
+            if (choice.isEmpty()) {
                 return;
+            }
+
+            String roomType = null;
+            switch (choice) {
+                case "1": roomType = "SINGLE"; break;
+                case "2": roomType = "DOUBLE"; break;
+                case "3": roomType = "SUITE"; break;
+                case "4": roomType = "DELUXE"; break;
+                case "5": roomType = "PENTHOUSE"; break;
+                default:
+                    UiUtils.printError("Invalid option. Please try again.");
+                    continue;
+            }
+            displayRoomsPaginated(roomType, null);
         }
-        displayRoomsPaginated(roomType, null);
     }
 
     private void filterByRoomStatus() throws SQLException {
-        UiUtils.printHeader("Room Status Options");
-        UiUtils.printMenu(null,
-                "1. Available",
-                "2. Maintenance");
+        while (true) {
+            UiUtils.printHeader("Room Status Options");
+            UiUtils.printMenu("Select Status",
+                    "1. Available",
+                    "2. Maintenance");
+            System.out.println("(Leave empty to go back)");
 
-        System.out.print("Select status (1-2): ");
-        String choice = scanner.nextLine().trim();
-        String status = null;
-        switch (choice) {
-            case "1": status = "AVAILABLE"; break;
-            case "2": status = "MAINTENANCE"; break;
-            default:
-                UiUtils.printError("Invalid option.");
-                return;
+            System.out.print("Select status (1-2): ");
+            String choice = scanner.nextLine().trim();
+            if (choice.isEmpty()) return;
+
+            String status = null;
+            switch (choice) {
+                case "1": status = "AVAILABLE"; break;
+                case "2": status = "MAINTENANCE"; break;
+                default:
+                    UiUtils.printError("Invalid option. Please try again.");
+                    continue;
+            }
+            displayRoomsPaginated(null, status);
         }
-        displayRoomsPaginated(null, status);
     }
 
     private void filterByTypeAndStatus() throws SQLException {
-        UiUtils.printHeader("Filter by Type AND Status");
+        while (true) {
+            UiUtils.printHeader("Filter by Type AND Status");
 
-        // Select room type
-        UiUtils.printMenu("Select Room Type",
-                "1. SINGLE",
-                "2. DOUBLE",
-                "3. SUITE",
-                "4. DELUXE",
-                "5. PENTHOUSE");
+            // Select room type
+            UiUtils.printMenu("Select Room Type",
+                    "1. SINGLE",
+                    "2. DOUBLE",
+                    "3. SUITE",
+                    "4. DELUXE",
+                    "5. PENTHOUSE");
+            System.out.println("(Leave empty to go back)");
 
-        System.out.print("Select room type (1-5): ");
-        String typeChoice = scanner.nextLine().trim();
-        String roomType = null;
-        switch (typeChoice) {
-            case "1": roomType = "SINGLE"; break;
-            case "2": roomType = "DOUBLE"; break;
-            case "3": roomType = "SUITE"; break;
-            case "4": roomType = "DELUXE"; break;
-            case "5": roomType = "PENTHOUSE"; break;
-            default:
-                UiUtils.printError("Invalid option.");
-                return;
+            System.out.print("Select room type (1-5): ");
+            String typeChoice = scanner.nextLine().trim();
+            if (typeChoice.isEmpty()) return;
+
+            String roomType = null;
+            switch (typeChoice) {
+                case "1": roomType = "SINGLE"; break;
+                case "2": roomType = "DOUBLE"; break;
+                case "3": roomType = "SUITE"; break;
+                case "4": roomType = "DELUXE"; break;
+                case "5": roomType = "PENTHOUSE"; break;
+                default:
+                    UiUtils.printError("Invalid option. Please try again.");
+                    continue;
+            }
+
+            // Select status
+            UiUtils.printMenu("Select Room Status",
+                    "1. Available",
+                    "2. Maintenance");
+            System.out.println("(Leave empty to go back to type selection)");
+
+            System.out.print("Select status (1-2): ");
+            String statusChoice = scanner.nextLine().trim();
+            if (statusChoice.isEmpty()) continue; // Go back to type selection
+
+            String status = null;
+            switch (statusChoice) {
+                case "1": status = "AVAILABLE"; break;
+                case "2": status = "MAINTENANCE"; break;
+                default:
+                    UiUtils.printError("Invalid option. Please try again.");
+                    continue; // Re-prompt for type or add inner loop? Let's just continue to type selection for simplicity.
+            }
+            displayRoomsFiltered(roomType, status);
         }
-
-        // Select status
-        UiUtils.printMenu("Select Room Status",
-                "1. Available",
-                "2. Maintenance");
-
-        System.out.print("Select status (1-2): ");
-        String statusChoice = scanner.nextLine().trim();
-        String status = null;
-        switch (statusChoice) {
-            case "1": status = "AVAILABLE"; break;
-            case "2": status = "MAINTENANCE"; break;
-            default:
-                UiUtils.printError("Invalid option.");
-                return;
-        }
-        displayRoomsFiltered(roomType, status);
     }
 
     private void displayRoomsFiltered(String roomType, String status) throws SQLException {

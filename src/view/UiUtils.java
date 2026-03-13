@@ -33,7 +33,7 @@ public class UiUtils {
             System.out.println(titleTable.render());
         }
 
-        Table menuTable = new Table(1, BorderStyle.UNICODE_BOX);
+        Table menuTable = new Table(1, BorderStyle.UNICODE_ROUND_BOX);
         for (String option : options) {
             menuTable.addCell(" " + option + " ");
         }
