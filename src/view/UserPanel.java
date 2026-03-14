@@ -7,8 +7,10 @@ import model.entities.Invoice;
 import model.service.RoomService;
 import model.service.BookingService;
 import model.service.UserService;
+import model.service.InvoicePdfService;
 import org.nocrala.tools.texttablefmt.Table;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -408,6 +410,35 @@ public class UserPanel {
         detailTable.addCell("Payment Status:");
         detailTable.addCell(invoice.getInvoiceStatus().name());
         System.out.println(UiUtils.renderTable(detailTable));
+
+        // Offer PDF download
+        System.out.print("\nDownload as PDF? (y/n): ");
+        String downloadPdf = scanner.nextLine().trim().toLowerCase();
+        if (downloadPdf.equals("y")) {
+            downloadInvoicePdf(invoice);
+        }
+    }
+
+    private void downloadInvoicePdf(Invoice invoice) {
+        try {
+            InvoicePdfService pdfService = new InvoicePdfService();
+            String outputPath = System.getProperty("user.home") + File.separator + "Downloads";
+
+            String filePath = pdfService.generateInvoicePdf(invoice, outputPath);
+
+            UiUtils.printSuccess("Invoice PDF generated successfully!");
+            System.out.println("Saved to: " + filePath);
+
+            // Try to open the file automatically
+            try {
+                Runtime.getRuntime().exec(new String[]{"xdg-open", filePath});
+            } catch (Exception e) {
+                // User can manually open the file
+            }
+        } catch (Exception e) {
+            UiUtils.printError("Failed to generate PDF: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // ============================================
