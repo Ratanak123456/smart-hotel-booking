@@ -188,7 +188,7 @@ public class UserPanel {
             booking.setUsername(loggedInUser.getUsername());
             booking.setUserEmail(loggedInUser.getEmail());
             booking.setUserPhone(loggedInUser.getPhoneNumber());
-            booking.setTelegramChatId(loggedInUser.getTelegramChatId());
+            // Note: telegramChatId is only set when booking from Telegram bot, not from console
 
             Booking createdBooking = bookingService.createBooking(booking);
 
