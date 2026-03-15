@@ -47,6 +47,12 @@ public class InvoicePdfService {
         // Fill the report
         JasperPrint print = JasperFillManager.fillReport(report, params, new JREmptyDataSource());
 
+        // Set property to disable glyph rendering to avoid NoClassDefFoundError with unpatched iText
+        JasperReportsContext context = DefaultJasperReportsContext.getInstance();
+        context.setProperty("net.sf.jasperreports.export.pdf.classic.glyph.renderer.enabled", "false");
+        context.setProperty("net.sf.jasperreports.export.pdf.glyph.renderer.enabled", "false");
+        context.setProperty("net.sf.jasperreports.export.pdf.classic.fop.glyph.substitution.enabled", "false");
+
         // Ensure output directory exists
         File outputDir = new File(outputPath);
         if (!outputDir.exists()) {
@@ -55,7 +61,7 @@ public class InvoicePdfService {
 
         // Export to PDF
         String fileName = outputPath + File.separator + "invoice_" + invoice.getInvoiceNumber() + ".pdf";
-        JRPdfExporter exporter = new JRPdfExporter();
+        JRPdfExporter exporter = new JRPdfExporter(context);
         exporter.setExporterInput(new SimpleExporterInput(print));
         exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(new FileOutputStream(fileName)));
         exporter.exportReport();
