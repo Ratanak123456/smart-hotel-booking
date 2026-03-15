@@ -429,11 +429,19 @@ public class UserPanel {
             UiUtils.printSuccess("Invoice PDF generated successfully!");
             System.out.println("Saved to: " + filePath);
 
-            // Try to open the file automatically
+            // Try to open the file automatically in a cross-platform way
             try {
-                Runtime.getRuntime().exec(new String[]{"xdg-open", filePath});
+                File pdfFile = new File(filePath);
+                if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                    Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + pdfFile.getAbsolutePath());
+                } else if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+                    Runtime.getRuntime().exec("open " + pdfFile.getAbsolutePath());
+                } else {
+                    // Linux/Unix
+                    Runtime.getRuntime().exec("xdg-open " + pdfFile.getAbsolutePath());
+                }
             } catch (Exception e) {
-                // User can manually open the file
+                // If automatic opening fails, user can still open it manually
             }
         } catch (Exception e) {
             UiUtils.printError("Failed to generate PDF: " + e.getMessage());
