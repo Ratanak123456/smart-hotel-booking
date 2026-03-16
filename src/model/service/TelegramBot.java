@@ -108,6 +108,15 @@ public class TelegramBot implements Runnable {
     private void handleMessage(long chatId, String text) {
         UserSession session = sessions.computeIfAbsent(chatId, k -> new UserSession());
         
+        // Safety check: Ensure no ADMIN can bypass via an existing session
+        if (session.currentUser != null && "ADMIN".equalsIgnoreCase(session.currentUser.getRole())) {
+            session.currentUser = null;
+            session.reset();
+            reply(chatId, "⚠️ <b>Access Revoked!</b>\nAdmin accounts are not allowed to use the Telegram bot. Please use the management console.");
+            showMainMenu(chatId, session);
+            return;
+        }
+
         // 1. Global Commands
         if (text.equals("/start")) {
             session.reset();
@@ -266,6 +275,13 @@ public class TelegramBot implements Runnable {
             try {
                 User user = userService.login(session.tempData.get("username"), text);
                 if (user != null) {
+                    // Restrict admin login in telegram
+                    if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+                        session.state = State.NONE;
+                        reply(chatId, "❌ <b>Login Restricted!</b>\nAdmin accounts are not allowed to use the Telegram bot. Please login via the management console.");
+                        showMainMenu(chatId, session);
+                        return;
+                    }
                     session.currentUser = user;
                     // Auto-link Telegram ID if not set
                     if (user.getTelegramChatId() == null || user.getTelegramChatId() != chatId) {
