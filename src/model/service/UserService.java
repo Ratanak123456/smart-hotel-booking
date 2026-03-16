@@ -35,6 +35,11 @@ public class UserService {
             throw new ValidationException("Invalid email. Email must end with @gmail.com.");
         }
 
+        // Validation: Phone number must be at least 8 characters
+        if (phoneNumber == null || phoneNumber.trim().length() < 8) {
+            throw new ValidationException("Phone number must be at least 8 characters long.");
+        }
+
         // Validation: Strong password
         validatePassword(password);
 

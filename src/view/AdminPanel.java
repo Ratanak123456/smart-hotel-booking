@@ -108,14 +108,13 @@ public class AdminPanel {
         while (true) {
             UiUtils.printHeader("Available Room Types");
             UiUtils.printMenu("Select Room Type",
-                    "1. SINGLE",
-                    "2. DOUBLE",
-                    "3. SUITE",
-                    "4. DELUXE",
-                    "5. PENTHOUSE");
+                    "1. Regular",
+                    "2. Family",
+                    "3. Suite",
+                    "4. Deluxe");
             System.out.println("(Leave empty to go back)");
 
-            System.out.print("Select room type (1-5): ");
+            System.out.print("Select room type (1-4): ");
             String choice = scanner.nextLine().trim();
 
             if (choice.isEmpty()) {
@@ -124,11 +123,10 @@ public class AdminPanel {
 
             String roomType = null;
             switch (choice) {
-                case "1": roomType = "SINGLE"; break;
-                case "2": roomType = "DOUBLE"; break;
-                case "3": roomType = "SUITE"; break;
-                case "4": roomType = "DELUXE"; break;
-                case "5": roomType = "PENTHOUSE"; break;
+                case "1": roomType = "Regular"; break;
+                case "2": roomType = "Family"; break;
+                case "3": roomType = "Suite"; break;
+                case "4": roomType = "Deluxe"; break;
                 default:
                     UiUtils.printError("Invalid option. Please try again.");
                     continue;
@@ -170,24 +168,22 @@ public class AdminPanel {
 
             // Select room type
             UiUtils.printMenu("Select Room Type",
-                    "1. SINGLE",
-                    "2. DOUBLE",
-                    "3. SUITE",
-                    "4. DELUXE",
-                    "5. PENTHOUSE");
+                    "1. Regular",
+                    "2. Family",
+                    "3. Suite",
+                    "4. Deluxe");
             System.out.println("(Leave empty to go back)");
 
-            System.out.print("Select room type (1-5): ");
+            System.out.print("Select room type (1-4): ");
             String typeChoice = scanner.nextLine().trim();
             if (typeChoice.isEmpty()) return;
 
             String roomType = null;
             switch (typeChoice) {
-                case "1": roomType = "SINGLE"; break;
-                case "2": roomType = "DOUBLE"; break;
-                case "3": roomType = "SUITE"; break;
-                case "4": roomType = "DELUXE"; break;
-                case "5": roomType = "PENTHOUSE"; break;
+                case "1": roomType = "Regular"; break;
+                case "2": roomType = "Family"; break;
+                case "3": roomType = "Suite"; break;
+                case "4": roomType = "Deluxe"; break;
                 default:
                     UiUtils.printError("Invalid option. Please try again.");
                     continue;
